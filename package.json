@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "livekit-client": "^2.22.0",
+    "livekit-server-sdk": "^2.18.0",
     "next": "16.3.2",
     "react": "19.2.8",
     "react-dom": "19.2.8"
