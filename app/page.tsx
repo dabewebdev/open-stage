@@ -95,9 +95,14 @@ export default function Home() {
   }
 
   async function loadMessages() {
+    const twentyFourHoursAgo = new Date(
+      Date.now() - 24 * 60 * 60 * 1000,
+    ).toISOString();
+
     const { data, error } = await supabase
       .from("open_stage_messages")
       .select("*")
+      .gte("created_at", twentyFourHoursAgo)
       .order("created_at", {
         ascending: true,
       })
@@ -849,6 +854,16 @@ export default function Home() {
                 Send
               </button>
             </form>
+            <p
+              style={{
+                margin: "6px 10px 10px",
+                fontSize: "12px",
+                color: "#6b6570",
+                textAlign: "center",
+              }}
+            >
+              Chat history disappears after 24 hours. Be yourself. Be kind.
+            </p>
           </div>
         </section>
 
