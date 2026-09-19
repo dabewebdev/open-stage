@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import StaffConsole from "./StaffConsole";
+import StaffMusicLibrary from "./StaffMusicLibrary";
 
 export default function StaffConsoleGate() {
   const pathname = usePathname();
@@ -17,6 +18,7 @@ export default function StaffConsoleGate() {
         `}</style>
       )}
       <StaffConsole key={pathname} />
+      <StaffMusicLibrary />
     </>
   );
 }
