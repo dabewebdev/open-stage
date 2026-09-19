@@ -1,8 +1,19 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { KWENTAYO_MUSIC_LIBRARY } from "@/lib/kwentayo-music";
+
+function pickRandomTrack(excludeId?: string) {
+  const choices = excludeId
+    ? KWENTAYO_MUSIC_LIBRARY.filter((track) => track.id !== excludeId)
+    : KWENTAYO_MUSIC_LIBRARY;
+  return choices[Math.floor(Math.random() * choices.length)] ?? KWENTAYO_MUSIC_LIBRARY[0];
+}
+
+function trackDurationMs(track: (typeof KWENTAYO_MUSIC_LIBRARY)[number]) {
+  return Math.max(15000, Math.round((60 / track.tempo) * 64 * 1000));
+}
 
 export default function StaffMusicLibrary() {
   const [role, setRole] = useState<string | null>(null);
@@ -10,6 +21,13 @@ export default function StaffMusicLibrary() {
   const [selectedId, setSelectedId] = useState("001");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [continuousShuffle, setContinuousShuffle] = useState(false);
+  const shuffleRef = useRef(false);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    shuffleRef.current = continuousShuffle;
+  }, [continuousShuffle]);
 
   useEffect(() => {
     const loadRole = async () => {
@@ -54,6 +72,12 @@ export default function StaffMusicLibrary() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, []);
+
   const selected = useMemo(
     () => KWENTAYO_MUSIC_LIBRARY.find((track) => track.id === selectedId) ?? KWENTAYO_MUSIC_LIBRARY[0],
     [selectedId],
@@ -61,11 +85,15 @@ export default function StaffMusicLibrary() {
 
   if (role !== "admin" || !host) return null;
 
-  async function play(trackId = selected.id) {
+  async function play(trackId = selected.id, automatic = false) {
     const track = KWENTAYO_MUSIC_LIBRARY.find((item) => item.id === trackId);
-    if (!track) return;
-    setBusy(true);
-    setNotice("");
+    if (!track) return false;
+
+    if (!automatic) {
+      setBusy(true);
+      setNotice("");
+    }
+
     try {
       const audioUrl = `${window.location.origin}/api/kwentayo-music/${track.id}`;
       const response = await fetch("/api/stage-media", {
@@ -80,18 +108,65 @@ export default function StaffMusicLibrary() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error || "Unable to play this track.");
-      setNotice(`Playing ${track.title} when the stage is empty.`);
+
+      if (!automatic) {
+        setNotice(`Playing ${track.title} when the stage is empty.`);
+      }
+      return true;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Unable to play this track.");
+      return false;
     } finally {
-      setBusy(false);
+      if (!automatic) setBusy(false);
     }
   }
 
-  function shuffle() {
-    const next = KWENTAYO_MUSIC_LIBRARY[Math.floor(Math.random() * KWENTAYO_MUSIC_LIBRARY.length)];
-    setSelectedId(next.id);
-    void play(next.id);
+  function scheduleNext(currentId: string) {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    const current = KWENTAYO_MUSIC_LIBRARY.find((track) => track.id === currentId);
+    if (!current) return;
+
+    timerRef.current = window.setTimeout(async () => {
+      if (!shuffleRef.current) return;
+      const next = pickRandomTrack(currentId);
+      setSelectedId(next.id);
+      const ok = await play(next.id, true);
+      if (ok && shuffleRef.current) {
+        setNotice(`Continuous shuffle is ON. Now playing ${next.title}.`);
+        scheduleNext(next.id);
+      }
+    }, trackDurationMs(current));
+  }
+
+  async function playSelected() {
+    shuffleRef.current = false;
+    setContinuousShuffle(false);
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    await play(selected.id);
+  }
+
+  async function toggleShuffle() {
+    if (continuousShuffle) {
+      shuffleRef.current = false;
+      setContinuousShuffle(false);
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+      setNotice("Continuous shuffle is OFF. The current track will keep looping.");
+      return;
+    }
+
+    const first = pickRandomTrack(selected.id);
+    setSelectedId(first.id);
+    shuffleRef.current = true;
+    setContinuousShuffle(true);
+    const ok = await play(first.id, true);
+    if (!ok) {
+      shuffleRef.current = false;
+      setContinuousShuffle(false);
+      return;
+    }
+    setNotice(`Continuous shuffle is ON. Now playing ${first.title}.`);
+    scheduleNext(first.id);
   }
 
   return createPortal(
@@ -118,15 +193,17 @@ export default function StaffMusicLibrary() {
         ))}
       </select>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
-        <button type="button" disabled={busy} onClick={() => void play()}>
+        <button type="button" disabled={busy} onClick={() => void playSelected()}>
           {busy ? "Loading..." : "▶ Play Selected"}
         </button>
-        <button type="button" disabled={busy} onClick={shuffle}>
-          🔀 Shuffle
+        <button type="button" disabled={busy} onClick={() => void toggleShuffle()}>
+          {continuousShuffle ? "⏹ Stop Shuffle" : "🔀 Continuous Shuffle"}
         </button>
       </div>
       <p style={{ margin: "7px 0 0", fontSize: 10, opacity: .68, lineHeight: 1.35 }}>
-        Built-in Kwentayo instrumental loops. No external audio link needed. Custom audio below still works too.
+        {continuousShuffle
+          ? "Continuous Shuffle is ON. A different track is selected automatically after each track interval. Keep this Admin tab open."
+          : "Play Selected loops one track. Continuous Shuffle automatically rotates through the library. Custom audio below still works too."}
       </p>
       {notice && <p style={{ margin: "7px 0 0", fontSize: 11 }}>{notice}</p>}
     </div>,
