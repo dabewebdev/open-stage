@@ -12,7 +12,7 @@ type StageState = {
 };
 
 const PUBLIC_CAM_EMBED =
-  "https://www.youtube.com/embed/uwXgcTc8oY8?autoplay=1&mute=1&controls=1&playsinline=1&rel=0&modestbranding=1";
+  "https://www.youtube.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ&autoplay=1&mute=1&controls=1&playsinline=1&rel=0&modestbranding=1";
 
 export default function StageVideoLayer() {
   const [stageHost, setStageHost] = useState<HTMLElement | null>(null);
@@ -360,7 +360,7 @@ export default function StageVideoLayer() {
             style={styles.publicCamFrame}
           />
           <div style={styles.publicCamShade} />
-          <div style={styles.publicCamBadge}>● LIVE PUBLIC CAM · NASA ISS</div>
+          <div style={styles.publicCamBadge}>● LIVE PUBLIC CAM · NASA</div>
           <div style={styles.publicCamMessage}>
             <strong>Window to the world</strong>
             <span>Stage is open — join the line anytime.</span>
