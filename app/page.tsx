@@ -77,6 +77,8 @@ export default function Home() {
   const [micHelp, setMicHelp] = useState(false);
 
   const [stageAudioLevel, setStageAudioLevel] = useState(0);
+  const [stageSecondsLeft, setStageSecondsLeft] = useState(10 * 60);
+  const autoEndRef = useRef(false);
   const [stageMuted, setStageMuted] = useState(false);
   const [stageVolume, setStageVolume] = useState(100);
 
@@ -184,6 +186,40 @@ export default function Home() {
     !!userId &&
     !stageState?.current_user_id &&
     firstInQueue?.user_id === userId;
+
+  const STAGE_LIMIT_SECONDS = 10 * 60;
+
+  useEffect(() => {
+    autoEndRef.current = false;
+
+    if (!stageState?.current_user_id || !stageState.started_at) {
+      setStageSecondsLeft(STAGE_LIMIT_SECONDS);
+      return;
+    }
+
+    const updateTimer = () => {
+      const started = new Date(stageState.started_at as string).getTime();
+      const elapsed = Math.floor((Date.now() - started) / 1000);
+      setStageSecondsLeft(Math.max(0, STAGE_LIMIT_SECONDS - elapsed));
+    };
+
+    updateTimer();
+    const timer = window.setInterval(updateTimer, 1000);
+    return () => window.clearInterval(timer);
+  }, [stageState?.current_user_id, stageState?.started_at]);
+
+  useEffect(() => {
+    if (!isOnStage || stageSecondsLeft > 0 || autoEndRef.current) return;
+    autoEndRef.current = true;
+    void endTurn();
+  }, [isOnStage, stageSecondsLeft]);
+
+  const timerTone =
+    stageSecondsLeft <= 30
+      ? "danger"
+      : stageSecondsLeft <= 120
+        ? "warning"
+        : "normal";
 
   async function getAccessToken() {
     const {
@@ -1135,6 +1171,12 @@ export default function Home() {
 
                   <div className="live">LIVE</div>
 
+                  <div className={`stage-timer ${timerTone}`}>
+                    <span>⏱</span>
+                    <strong>{formatCountdown(stageSecondsLeft)}</strong>
+                    <small>remaining</small>
+                  </div>
+
                   <LiveWaveform level={stageAudioLevel} />
 
                   <p>
@@ -1275,6 +1317,8 @@ export default function Home() {
                 {microphoneStarting ? "Getting Mic..." : "Take The Stage"}
               </button>
             )}
+
+            <div className="stage-limit-note">⏱ 10 minutes maximum per turn</div>
 
             <p className="queue-caption">
               {inQueue
@@ -1553,6 +1597,12 @@ function LiveWaveform({ level }: { level: number }) {
       {bars}
     </div>
   );
+}
+
+function formatCountdown(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function formatTime(dateString: string) {
