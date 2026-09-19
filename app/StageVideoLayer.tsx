@@ -12,7 +12,7 @@ type StageState = {
 };
 
 const PUBLIC_CAM_EMBED =
-  "https://www.youtube.com/embed/sWasdbDVNvc?autoplay=1&mute=1&controls=1&playsinline=1&rel=0&modestbranding=1";
+  "https://www.youtube.com/embed/uwXgcTc8oY8?autoplay=1&mute=1&controls=1&playsinline=1&rel=0&modestbranding=1";
 
 export default function StageVideoLayer() {
   const [stageHost, setStageHost] = useState<HTMLElement | null>(null);
@@ -107,9 +107,7 @@ export default function StageVideoLayer() {
       document
         .querySelectorAll<HTMLElement>('aside[aria-label="Kwentayo staff console"] section')
         .forEach((section) => {
-          if (section.textContent?.includes("Stage Intermission")) {
-            section.style.display = "none";
-          }
+          if (section.textContent?.includes("Stage Intermission")) section.style.display = "none";
         });
 
       document.querySelectorAll<HTMLElement>('div[class*="intermissionOverlay"]').forEach((overlay) => {
@@ -377,102 +375,14 @@ function formatCountdown(totalSeconds: number) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  publicCamWrap: {
-    position: "absolute",
-    inset: 0,
-    zIndex: 24,
-    overflow: "hidden",
-    background: "#090b10",
-  },
-  publicCamFrame: {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    border: 0,
-    background: "#090b10",
-  },
-  publicCamShade: {
-    position: "absolute",
-    inset: 0,
-    pointerEvents: "none",
-    background: "linear-gradient(180deg, rgba(0,0,0,.18), transparent 45%, rgba(0,0,0,.48))",
-  },
-  publicCamBadge: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    padding: "5px 8px",
-    borderRadius: 4,
-    background: "rgba(0,0,0,.62)",
-    color: "white",
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: ".08em",
-    pointerEvents: "none",
-  },
-  publicCamMessage: {
-    position: "absolute",
-    left: 14,
-    right: 14,
-    bottom: 12,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "end",
-    gap: 12,
-    padding: "9px 11px",
-    borderRadius: 5,
-    background: "rgba(0,0,0,.58)",
-    color: "white",
-    fontSize: 11,
-    pointerEvents: "none",
-  },
-  performerVideo: {
-    position: "absolute",
-    inset: 0,
-    zIndex: 28,
-    background: "#090b10",
-    overflow: "hidden",
-    transition: "opacity .2s ease",
-  },
-  videoInfo: {
-    position: "absolute",
-    zIndex: 32,
-    left: 12,
-    bottom: 12,
-    display: "grid",
-    gap: 2,
-    padding: "7px 9px",
-    borderRadius: 5,
-    background: "rgba(0,0,0,.66)",
-    color: "white",
-    pointerEvents: "none",
-  },
-  cameraControls: {
-    position: "absolute",
-    zIndex: 36,
-    right: 12,
-    bottom: 12,
-    display: "grid",
-    justifyItems: "end",
-    gap: 5,
-  },
-  cameraButton: {
-    border: "1px solid rgba(255,255,255,.45)",
-    borderRadius: 5,
-    background: "rgba(32,18,43,.88)",
-    color: "white",
-    padding: "8px 10px",
-    fontSize: 11,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  cameraError: {
-    maxWidth: 210,
-    padding: "4px 6px",
-    borderRadius: 4,
-    background: "rgba(120,20,30,.9)",
-    color: "white",
-    fontSize: 9,
-  },
+  publicCamWrap: { position: "absolute", inset: 0, zIndex: 24, overflow: "hidden", background: "#090b10" },
+  publicCamFrame: { position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, background: "#090b10" },
+  publicCamShade: { position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(180deg, rgba(0,0,0,.18), transparent 45%, rgba(0,0,0,.48))" },
+  publicCamBadge: { position: "absolute", top: 12, left: 12, padding: "5px 8px", borderRadius: 4, background: "rgba(0,0,0,.62)", color: "white", fontSize: 10, fontWeight: 800, letterSpacing: ".08em", pointerEvents: "none" },
+  publicCamMessage: { position: "absolute", left: 14, right: 14, bottom: 12, display: "flex", justifyContent: "space-between", alignItems: "end", gap: 12, padding: "9px 11px", borderRadius: 5, background: "rgba(0,0,0,.58)", color: "white", fontSize: 11, pointerEvents: "none" },
+  performerVideo: { position: "absolute", inset: 0, zIndex: 28, background: "#090b10", overflow: "hidden", transition: "opacity .2s ease" },
+  videoInfo: { position: "absolute", zIndex: 32, left: 12, bottom: 12, display: "grid", gap: 2, padding: "7px 9px", borderRadius: 5, background: "rgba(0,0,0,.66)", color: "white", pointerEvents: "none" },
+  cameraControls: { position: "absolute", zIndex: 36, right: 12, bottom: 12, display: "grid", justifyItems: "end", gap: 5 },
+  cameraButton: { border: "1px solid rgba(255,255,255,.45)", borderRadius: 5, background: "rgba(32,18,43,.88)", color: "white", padding: "8px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" },
+  cameraError: { maxWidth: 210, padding: "4px 6px", borderRadius: 4, background: "rgba(120,20,30,.9)", color: "white", fontSize: 9 },
 };
