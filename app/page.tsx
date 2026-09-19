@@ -1107,15 +1107,20 @@ export default function Home() {
                 }}
               />
 
-              <div className="dj-head">
-                <div className={`dj-disc ${radioPlaying ? "spinning" : ""}`}>
-                  <span>GW</span>
+              <div className="mini-globewave-head">
+                <div>
+                  <span className="radio-kicker">◉ LIVE RADIO</span>
+                  <strong>GlobeWave</strong>
                 </div>
-                <div className="dj-copy">
-                  <span className="on-air-dot" />
-                  <strong>{radioPlaying ? "ON AIR" : "RADIO READY"}</strong>
-                  <small>Powered by GlobeWave</small>
+                <span className="radio-signal">▂▄▆█</span>
+              </div>
+
+              <div className="mini-globe" aria-hidden="true">
+                <div className="mini-globe-orbit" />
+                <div className="mini-globe-earth">
+                  <span>🌏</span>
                 </div>
+                <div className="mini-globe-glow" />
               </div>
 
               {radioLoading ? (
@@ -1123,14 +1128,8 @@ export default function Home() {
               ) : radioStation ? (
                 <>
                   <div className="station-card">
-                    <div className="station-logo">
-                      {radioStation.favicon ? (
-                        <img src={radioStation.favicon} alt="" />
-                      ) : (
-                        <span>📻</span>
-                      )}
-                    </div>
                     <div className="station-copy">
+                      <span className="station-caption">NOW TUNED</span>
                       <strong>{radioStation.name}</strong>
                       <span>
                         {radioStation.country || "Worldwide"}
@@ -1181,14 +1180,24 @@ export default function Home() {
 
               {radioError && <p className="radio-error">{radioError}</p>}
 
-              <a
-                className="globewave-link"
-                href="https://globewave.vercel.app"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open full GlobeWave ↗
-              </a>
+              <div className="radio-footer-actions">
+                <a
+                  className="globewave-link"
+                  href="https://globewave.vercel.app"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  ☰ Browse Stations
+                </a>
+                <a
+                  className="globewave-link"
+                  href="https://globewave.vercel.app"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  ↗ Open GlobeWave
+                </a>
+              </div>
             </div>
           </div>
         </aside>
