@@ -11,7 +11,7 @@ export default function StaffConsoleGate() {
     <>
       {!isStaffRoute && (
         <style>{`
-          button[title="Kwentayo staff controls"] {
+          button[title="Kwentayo staff controls"]:not([class*="staffLauncherActive"]) {
             display: none !important;
           }
         `}</style>
