@@ -61,6 +61,8 @@ export default function Home() {
 
   const [microphoneStarting, setMicrophoneStarting] = useState(false);
 
+  const [stageAudioLevel, setStageAudioLevel] = useState(0);
+
   const [needsAudioStart, setNeedsAudioStart] = useState(false);
 
   const roomRef = useRef<Room | null>(null);
@@ -575,6 +577,21 @@ export default function Home() {
       setNeedsAudioStart(!room.canPlaybackAudio);
     });
 
+    room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+      const currentStageUserId = stageState?.current_user_id;
+
+      if (!currentStageUserId) {
+        setStageAudioLevel(0);
+        return;
+      }
+
+      const performer = speakers.find(
+        (speaker) => speaker.identity === currentStageUserId,
+      );
+
+      setStageAudioLevel(performer?.audioLevel ?? 0);
+    });
+
     async function connect() {
       try {
         setAudioStatus("connecting");
@@ -632,7 +649,13 @@ export default function Home() {
         audioContainerRef.current.innerHTML = "";
       }
     };
-  }, [joined, userId, nickname]);
+  }, [joined, userId, nickname, stageState?.current_user_id]);
+
+  useEffect(() => {
+    if (!stageState?.current_user_id) {
+      setStageAudioLevel(0);
+    }
+  }, [stageState?.current_user_id]);
 
   if (!joined) {
     return (
@@ -782,6 +805,8 @@ export default function Home() {
                   <h2>{stageState.current_nickname}</h2>
 
                   <div className="live">LIVE</div>
+
+                  <LiveWaveform level={stageAudioLevel} />
 
                   <p>
                     <strong>{people.length} listening</strong>
@@ -953,6 +978,22 @@ export default function Home() {
         </div>
       )}
     </main>
+  );
+}
+
+function LiveWaveform({ level }: { level: number }) {
+  const bars = Array.from({ length: 30 }, (_, index) => {
+    const wave = 0.35 + 0.65 * Math.abs(Math.sin(index * 0.72));
+    const energy = Math.min(1, Math.max(0.04, level * 5.5));
+    const height = 6 + Math.round(44 * energy * wave);
+
+    return <span key={index} style={{ height: `${height}px` }} />;
+  });
+
+  return (
+    <div className="waveform" aria-label="Live microphone activity">
+      {bars}
+    </div>
   );
 }
 
