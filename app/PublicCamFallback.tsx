@@ -17,6 +17,14 @@ type PublicCam = {
   url: string;
 };
 
+type WeatherInfo = {
+  temperature: number;
+  apparentTemperature: number;
+  weatherCode: number;
+  isDay: boolean;
+  unit: "°F" | "°C";
+};
+
 /*
  * The idle stage intentionally uses image-based public cameras rather than
  * third-party video embeds. This keeps the room lightweight for visitors and
@@ -94,6 +102,25 @@ const CAMS: PublicCam[] = [
 
 const ROTATE_EVERY_MS = 90_000;
 const REFRESH_EVERY_MS = 20_000;
+const WEATHER_REFRESH_MS = 15 * 60_000;
+
+function weatherLabel(code: number, isDay: boolean) {
+  if (code === 0) return isDay ? { icon: "☀️", text: "Clear" } : { icon: "🌙", text: "Clear" };
+  if (code === 1) return { icon: isDay ? "🌤️" : "🌙", text: "Mostly clear" };
+  if (code === 2) return { icon: "⛅", text: "Partly cloudy" };
+  if (code === 3) return { icon: "☁️", text: "Cloudy" };
+  if (code === 45 || code === 48) return { icon: "🌫️", text: "Foggy" };
+  if ([51, 53, 55, 56, 57].includes(code)) return { icon: "🌦️", text: "Drizzle" };
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { icon: "🌧️", text: "Rain" };
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return { icon: "❄️", text: "Snow" };
+  if ([95, 96, 99].includes(code)) return { icon: "⛈️", text: "Thunderstorms" };
+  return { icon: "🌤️", text: "Current weather" };
+}
+
+function prefersFahrenheit() {
+  const locale = navigator.language || "en-US";
+  return /-US$|-BS$|-BZ$|-KY$|-PW$/i.test(locale);
+}
 
 export default function PublicCamFallback() {
   const [stageHost, setStageHost] = useState<HTMLElement | null>(null);
@@ -102,11 +129,19 @@ export default function PublicCamFallback() {
   const [camIndex, setCamIndex] = useState(0);
   const [refreshKey, setRefreshKey] = useState(Date.now());
   const [paused, setPaused] = useState(false);
+  const [weatherEnabled, setWeatherEnabled] = useState(false);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weather, setWeather] = useState<WeatherInfo | null>(null);
+  const [weatherError, setWeatherError] = useState("");
 
   useEffect(() => {
     const saved = window.localStorage.getItem("kwentayo-cam-category");
     if (saved === "nature" || saved === "city" || saved === "mixed") {
       setCategory(saved);
+    }
+
+    if (window.localStorage.getItem("kwentayo-weather-enabled") === "true") {
+      setWeatherEnabled(true);
     }
   }, []);
 
@@ -172,6 +207,69 @@ export default function PublicCamFallback() {
     return () => window.clearInterval(timer);
   }, [stage?.current_user_id, paused, activeCams.length]);
 
+  const loadLocalWeather = async () => {
+    if (!navigator.geolocation) {
+      setWeatherError("Location is not supported on this device.");
+      return;
+    }
+
+    setWeatherLoading(true);
+    setWeatherError("");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          // Approximate coordinates are enough for weather and avoid sending
+          // more location precision than the feature needs.
+          const latitude = Math.round(position.coords.latitude * 100) / 100;
+          const longitude = Math.round(position.coords.longitude * 100) / 100;
+          const useF = prefersFahrenheit();
+          const params = new URLSearchParams({
+            latitude: String(latitude),
+            longitude: String(longitude),
+            current: "temperature_2m,apparent_temperature,weather_code,is_day",
+            temperature_unit: useF ? "fahrenheit" : "celsius",
+            timezone: "auto",
+          });
+
+          const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+          if (!response.ok) throw new Error("Weather is temporarily unavailable.");
+          const result = await response.json();
+          const current = result?.current;
+          if (!current) throw new Error("Weather is temporarily unavailable.");
+
+          setWeather({
+            temperature: Math.round(current.temperature_2m),
+            apparentTemperature: Math.round(current.apparent_temperature),
+            weatherCode: Number(current.weather_code),
+            isDay: Number(current.is_day) === 1,
+            unit: useF ? "°F" : "°C",
+          });
+          setWeatherEnabled(true);
+          window.localStorage.setItem("kwentayo-weather-enabled", "true");
+        } catch (error) {
+          setWeatherError(error instanceof Error ? error.message : "Weather is temporarily unavailable.");
+        } finally {
+          setWeatherLoading(false);
+        }
+      },
+      () => {
+        setWeatherLoading(false);
+        setWeatherError("Allow location to show your local weather.");
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60_000 },
+    );
+  };
+
+  useEffect(() => {
+    if (!weatherEnabled || stage?.current_user_id) return;
+    void loadLocalWeather();
+    const timer = window.setInterval(() => void loadLocalWeather(), WEATHER_REFRESH_MS);
+    return () => window.clearInterval(timer);
+    // weatherEnabled is intentionally the switch for this personal feature.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weatherEnabled, stage?.current_user_id]);
+
   const nextCam = () => {
     if (!activeCams.length) return;
     setCamIndex((current) => (current + 1) % activeCams.length);
@@ -184,11 +282,19 @@ export default function PublicCamFallback() {
     window.localStorage.setItem("kwentayo-cam-category", next);
   };
 
+  const disableWeather = () => {
+    setWeatherEnabled(false);
+    setWeather(null);
+    setWeatherError("");
+    window.localStorage.removeItem("kwentayo-weather-enabled");
+  };
+
   const cam = activeCams[camIndex] ?? activeCams[0] ?? CAMS[0];
   const src = useMemo(
     () => `${cam.url}${cam.url.includes("?") ? "&" : "?"}t=${refreshKey}`,
     [cam, refreshKey],
   );
+  const weatherView = weather ? weatherLabel(weather.weatherCode, weather.isDay) : null;
 
   if (!stageHost || stage?.current_user_id) return null;
 
@@ -242,6 +348,31 @@ export default function PublicCamFallback() {
         >
           {paused ? "Resume Rotation" : "Hold This View"}
         </button>
+      </div>
+
+      <div style={styles.weatherWrap}>
+        {weather && weatherView ? (
+          <div style={styles.weatherCard}>
+            <span style={styles.weatherIcon}>{weatherView.icon}</span>
+            <div style={styles.weatherCopy}>
+              <strong>Your weather · {weather.temperature}{weather.unit}</strong>
+              <span>{weatherView.text} · Feels like {weather.apparentTemperature}{weather.unit}</span>
+            </div>
+            <button type="button" onClick={disableWeather} style={styles.weatherHideButton} title="Hide local weather">
+              ×
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void loadLocalWeather()}
+            disabled={weatherLoading}
+            style={styles.weatherButton}
+          >
+            {weatherLoading ? "📍 Getting weather..." : "📍 Add My Weather"}
+          </button>
+        )}
+        {weatherError && <span style={styles.weatherError}>{weatherError}</span>}
       </div>
 
       <div style={styles.footer}>
@@ -338,6 +469,61 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 10,
     fontWeight: 700,
     cursor: "pointer",
+  },
+  weatherWrap: {
+    position: "absolute",
+    left: 12,
+    top: 80,
+    display: "grid",
+    gap: 4,
+    maxWidth: "min(320px, calc(100% - 24px))",
+  },
+  weatherButton: {
+    justifySelf: "start",
+    border: "1px solid rgba(255,255,255,.38)",
+    borderRadius: 999,
+    background: "rgba(0,0,0,.52)",
+    color: "white",
+    padding: "6px 10px",
+    fontSize: 10,
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  weatherCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "7px 9px",
+    border: "1px solid rgba(255,255,255,.34)",
+    borderRadius: 8,
+    background: "rgba(0,0,0,.56)",
+    color: "white",
+    backdropFilter: "blur(5px)",
+  },
+  weatherIcon: {
+    fontSize: 20,
+    lineHeight: 1,
+  },
+  weatherCopy: {
+    display: "grid",
+    gap: 1,
+    fontSize: 10,
+  },
+  weatherHideButton: {
+    marginLeft: 4,
+    border: 0,
+    background: "transparent",
+    color: "rgba(255,255,255,.8)",
+    fontSize: 18,
+    lineHeight: 1,
+    cursor: "pointer",
+  },
+  weatherError: {
+    padding: "4px 7px",
+    borderRadius: 5,
+    background: "rgba(90,20,25,.78)",
+    color: "white",
+    fontSize: 9,
   },
   footer: {
     position: "absolute",
