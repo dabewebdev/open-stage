@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import StaffConsoleGate from "./StaffConsoleGate";
 import StageVideoLayer from "./StageVideoLayer";
+import PublicCamFallback from "./PublicCamFallback";
 
 export const metadata: Metadata = {
   title: "Kwentayo",
@@ -19,6 +20,7 @@ export default function RootLayout({
         {children}
         <StaffConsoleGate />
         <StageVideoLayer />
+        <PublicCamFallback />
       </body>
     </html>
   );
