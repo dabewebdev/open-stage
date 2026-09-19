@@ -332,7 +332,7 @@ export default function Home() {
       console.error("Enter room error:", error);
 
       setErrorMessage(
-        error instanceof Error ? error.message : "Unable to enter Open Stage.",
+        error instanceof Error ? error.message : "Unable to enter Kwentayo.",
       );
     } finally {
       setJoining(false);
@@ -1007,7 +1007,7 @@ export default function Home() {
       <main className="join-screen">
         <section className="join-box restore-box">
           <div className="join-logo">🎙</div>
-          <h1>OPEN STAGE</h1>
+          <h1>KWENTAYO</h1>
           <p className="join-tagline">Reconnecting to the room...</p>
         </section>
       </main>
@@ -1020,7 +1020,7 @@ export default function Home() {
         <section className="join-box">
           <div className="join-logo">🎙</div>
 
-          <h1>OPEN STAGE</h1>
+          <h1>KWENTAYO</h1>
 
           <p className="join-tagline">
             One room. One stage. Everyone gets a turn.
@@ -1077,9 +1077,9 @@ export default function Home() {
           <div className="brand-icon">🎙</div>
 
           <div>
-            <h1>OPEN STAGE</h1>
+            <h1>KWENTAYO</h1>
 
-            <p>One room. One stage. Everyone gets a turn.</p>
+            <p>Talk. Listen. Hang out.</p>
           </div>
         </div>
 
@@ -1523,7 +1523,7 @@ export default function Home() {
             <div className="mic-permission-icon">🎙️</div>
             <h3>Ready to go on stage?</h3>
             <p>
-              Open Stage needs your microphone so everyone in the room can hear you.
+              Kwentayo needs your microphone so everyone in the room can hear you.
             </p>
             <p className="mic-permission-tip">
               After you tap Yes, choose <strong>Allow</strong> when your browser asks.
@@ -1550,7 +1550,7 @@ export default function Home() {
             ×
           </button>
           <strong>🎙️ Microphone access is off</strong>
-          <span>Allow microphone access for Open Stage, then try again.</span>
+          <span>Allow microphone access for Kwentayo, then try again.</span>
           <button
             onClick={() => {
               setMicHelp(false);
