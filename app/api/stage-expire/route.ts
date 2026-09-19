@@ -62,8 +62,7 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", 1)
       .eq("current_user_id", expectedUserId)
-      .eq("started_at", expectedStartedAt)
-      .select("id");
+      .select("current_user_id");
 
     if (clearError) {
       return NextResponse.json({ error: "Unable to expire stage." }, { status: 500 });
