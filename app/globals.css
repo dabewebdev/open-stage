@@ -786,3 +786,221 @@ button {
   color: #716879;
   font-size: 13px;
 }
+
+/* GlobeWave DJ Radio — premium Yahoo Messenger-inspired panel */
+.radio-window {
+  min-height: 300px;
+  background: linear-gradient(180deg, #fcfbff 0%, #f0edf7 100%);
+}
+
+.dj-radio {
+  padding: 14px;
+  background:
+    radial-gradient(circle at 85% 0%, rgba(112, 50, 180, 0.16), transparent 42%),
+    linear-gradient(180deg, #fbfaff, #eeeaf5);
+}
+
+.dj-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid #cbc3d8;
+}
+
+.dj-disc {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font: 700 11px Arial, sans-serif;
+  letter-spacing: 1px;
+  border: 4px solid #d7cde6;
+  background:
+    radial-gradient(circle, #a47bc9 0 9%, #2d0b52 10% 19%, #7441a8 20% 23%, #1d0c31 24% 48%, #512278 49% 52%, #160820 53%);
+  box-shadow: 0 3px 10px rgba(38, 9, 65, 0.25);
+}
+
+.dj-disc.spinning {
+  animation: dj-spin 3s linear infinite;
+}
+
+@keyframes dj-spin {
+  to { transform: rotate(360deg); }
+}
+
+.dj-copy {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 7px;
+}
+
+.dj-copy strong {
+  color: #3f087b;
+  font-size: 15px;
+  letter-spacing: .5px;
+}
+
+.dj-copy small {
+  grid-column: 2;
+  color: #746b7d;
+  margin-top: 3px;
+}
+
+.on-air-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d12626;
+  box-shadow: 0 0 0 3px rgba(209, 38, 38, .12);
+}
+
+.station-card {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0 7px;
+  padding: 9px;
+  border: 1px solid #c8bed6;
+  border-radius: 5px;
+  background: rgba(255,255,255,.78);
+  box-shadow: inset 0 1px #fff;
+}
+
+.station-logo {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e7e0f0;
+  font-size: 25px;
+}
+
+.station-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.station-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.station-copy strong {
+  overflow: hidden;
+  color: #171078;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.station-copy span {
+  overflow: hidden;
+  color: #706979;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.radio-eq {
+  height: 34px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 0;
+}
+
+.radio-bar {
+  width: 4px;
+  height: 5px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(#b078df, #4d128a);
+}
+
+.radio-bar.active {
+  animation: radio-pulse .7s ease-in-out infinite alternate;
+}
+
+@keyframes radio-pulse {
+  from { height: 5px; }
+  to { height: 27px; }
+}
+
+.radio-controls {
+  display: grid;
+  grid-template-columns: 46px 1fr 46px;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.radio-controls button {
+  min-height: 34px;
+  color: #211176;
+  font-weight: 700;
+  border: 1px solid #8e849b;
+  border-radius: 3px;
+  background: linear-gradient(#fff, #ddd9e5);
+  box-shadow: inset 0 1px #fff;
+}
+
+.radio-controls button:hover {
+  background: linear-gradient(#fff, #eee8f6);
+}
+
+.radio-controls .radio-play {
+  color: #fff;
+  border-color: #3b0d6d;
+  background: linear-gradient(#7441b2, #4a137f);
+}
+
+.radio-volume {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 7px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.radio-volume input {
+  width: 100%;
+  accent-color: #5a1a98;
+}
+
+.radio-status,
+.radio-stage-note,
+.radio-error {
+  margin: 9px 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+.radio-stage-note { color: #5b4a70; }
+.radio-error { color: #a51919; }
+
+.globewave-link {
+  display: block;
+  margin-top: 9px;
+  color: #32117d;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.globewave-link:hover { text-decoration: underline; }
+
+.right-column {
+  min-width: 0;
+}
