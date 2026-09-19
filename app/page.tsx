@@ -354,6 +354,7 @@ export default function Home() {
       await room.localParticipant.setMicrophoneEnabled(true);
 
       setMicrophoneLive(true);
+      setMicrophoneStarting(false);
     } catch (error) {
       console.error("Take stage error:", error);
 
