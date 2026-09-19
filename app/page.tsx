@@ -597,6 +597,10 @@ export default function Home() {
             .map((country) => country.name);
           if (!cancelled && names.length) {
             setRadioCountries(names);
+            const philippines = names.find((name) =>
+              name.toLowerCase().includes("philippines"),
+            );
+            if (philippines) setRadioCountry(philippines);
             return;
           }
         } catch {}
@@ -1084,29 +1088,43 @@ export default function Home() {
         </div>
 
         <div className="top-right">
-          <div className="top-welcome">
-            <span>Welcome, <strong>{nickname}!</strong></span>
-            <button className="leave-room-button" onClick={leaveRoom} type="button">
-              Leave Room
+          <div className="header-audio-controls" aria-label="Personal audio controls">
+            <button
+              className={stageMuted ? "header-audio-button muted" : "header-audio-button active"}
+              onClick={toggleStageMute}
+              type="button"
+            >
+              🎙 {stageMuted ? "Stage Off" : "Stage On"}
             </button>
-            <button className="theme-toggle" onClick={toggleTheme} type="button">
-              {theme === "light" ? "🌙 Yahoo Night" : "☀ Yahoo Classic"}
+            <button
+              className={!radioPlaying ? "header-audio-button muted" : "header-audio-button active"}
+              onClick={toggleRadio}
+              type="button"
+              disabled={!radioStation}
+            >
+              📻 {radioPlaying ? "Radio On" : "Radio Off"}
             </button>
           </div>
-          <div
-            style={{
-              marginTop: "7px",
-              fontSize: "12px",
-            }}
-          >
+
+          <div className="top-welcome">
+            <span>Welcome, <strong>{nickname}!</strong></span>
+            <div className="top-actions">
+              <button className="leave-room-button" onClick={leaveRoom} type="button">
+                Leave Room
+              </button>
+              <button className="theme-toggle" onClick={toggleTheme} type="button">
+                {theme === "light" ? "🌙 Yahoo Night" : "☀ Yahoo Classic"}
+              </button>
+            </div>
+          </div>
+
+          <div className="audio-connection">
+            <span className={audioStatus === "connected" ? "connection-dot online" : "connection-dot"} />
             Audio:{" "}
             <strong>
               {audioStatus === "connected" && "Connected ✓"}
-
               {audioStatus === "connecting" && "Connecting..."}
-
               {audioStatus === "error" && "Error"}
-
               {audioStatus === "disconnected" && "Disconnected"}
             </strong>
           </div>
@@ -1478,13 +1496,7 @@ export default function Home() {
         </div>
 
         <div className="mood-control">
-          <button
-            className={stageMuted ? "mood-mute muted" : "mood-mute"}
-            onClick={toggleStageMute}
-            type="button"
-          >
-            🎙 {stageMuted ? "Stage Muted" : "Stage On"}
-          </button>
+          <span className="mood-label">🎙 Stage Volume</span>
           <input
             aria-label="Stage volume"
             type="range"
@@ -1497,14 +1509,7 @@ export default function Home() {
         </div>
 
         <div className="mood-control">
-          <button
-            className={!radioPlaying ? "mood-mute muted" : "mood-mute"}
-            onClick={toggleRadio}
-            type="button"
-            disabled={!radioStation}
-          >
-            📻 {radioPlaying ? "Radio On" : "Radio Off"}
-          </button>
+          <span className="mood-label">📻 Radio Volume</span>
           <input
             aria-label="Radio volume"
             type="range"
