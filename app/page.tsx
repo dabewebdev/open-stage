@@ -670,8 +670,20 @@ export default function Home() {
   useEffect(() => {
     const audio = radioRef.current;
     if (!audio) return;
-    audio.volume = radioVolume / 100;
+    const normalized = Math.max(0, Math.min(1, radioVolume / 100));
+    audio.volume = normalized;
+    audio.muted = radioVolume === 0;
   }, [radioVolume]);
+
+  function changeRadioVolume(value: number) {
+    const next = Math.max(0, Math.min(100, value));
+    setRadioVolume(next);
+
+    const audio = radioRef.current;
+    if (!audio) return;
+    audio.volume = next / 100;
+    audio.muted = next === 0;
+  }
 
   async function toggleRadio() {
     const audio = radioRef.current;
@@ -690,6 +702,8 @@ export default function Home() {
         audio.src = radioStation.url_resolved;
         audio.load();
       }
+      audio.volume = Math.max(0, Math.min(1, radioVolume / 100));
+      audio.muted = radioVolume === 0;
       await audio.play();
       setRadioPlaying(true);
     } catch {
@@ -1462,7 +1476,8 @@ export default function Home() {
                       min="0"
                       max="100"
                       value={radioVolume}
-                      onChange={(event) => setRadioVolume(Number(event.target.value))}
+                      onInput={(event) => changeRadioVolume(Number(event.currentTarget.value))}
+                      onChange={(event) => changeRadioVolume(Number(event.currentTarget.value))}
                     />
                   </label>
 
@@ -1516,7 +1531,8 @@ export default function Home() {
             min="0"
             max="100"
             value={radioVolume}
-            onChange={(event) => setRadioVolume(Number(event.target.value))}
+            onInput={(event) => changeRadioVolume(Number(event.currentTarget.value))}
+                      onChange={(event) => changeRadioVolume(Number(event.currentTarget.value))}
           />
           <span>{radioVolume}%</span>
         </div>
