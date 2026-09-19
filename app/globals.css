@@ -1004,3 +1004,233 @@ button {
 .right-column {
   min-width: 0;
 }
+
+
+/* Compact GlobeWave plate — mirrors the real GlobeWave app in the sidebar */
+.radio-window {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.radio-window .window-title {
+  position: relative;
+  z-index: 3;
+}
+
+.dj-radio {
+  position: relative;
+  overflow: hidden;
+  padding: 12px;
+  color: #f6f7ff;
+  background:
+    radial-gradient(circle at 50% 37%, rgba(17, 133, 128, .28), transparent 30%),
+    radial-gradient(circle at 72% 18%, rgba(44, 94, 155, .20), transparent 34%),
+    linear-gradient(160deg, #07101f 0%, #05091a 55%, #080c1d 100%);
+}
+
+.mini-globewave-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.mini-globewave-head > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.radio-kicker {
+  color: #45d3a1;
+  font: 700 10px "Courier New", monospace;
+  letter-spacing: 1px;
+}
+
+.mini-globewave-head strong {
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: -.2px;
+}
+
+.radio-signal {
+  color: #42d59d;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.mini-globe {
+  position: relative;
+  height: 118px;
+  display: grid;
+  place-items: center;
+  margin: 2px 0 0;
+}
+
+.mini-globe-earth {
+  position: relative;
+  z-index: 2;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 37% 32%, #39674e 0 12%, transparent 13%),
+    radial-gradient(circle at 61% 47%, #315a42 0 15%, transparent 16%),
+    radial-gradient(circle at 44% 69%, #654f30 0 11%, transparent 12%),
+    radial-gradient(circle at 34% 28%, #274f83, #0c2850 54%, #06101f 76%);
+  border: 1px solid rgba(111, 183, 189, .42);
+  box-shadow:
+    inset -17px -10px 25px rgba(0,0,0,.72),
+    inset 8px 7px 15px rgba(123,178,197,.20),
+    0 0 28px rgba(40,183,153,.20);
+}
+
+.mini-globe-earth span {
+  font-size: 94px;
+  line-height: 1;
+  transform: scale(1.18);
+  filter: saturate(.75) brightness(.72) contrast(1.18);
+}
+
+.mini-globe-glow {
+  position: absolute;
+  z-index: 1;
+  width: 138px;
+  height: 44px;
+  bottom: 3px;
+  border-radius: 50%;
+  background: rgba(35, 201, 153, .18);
+  filter: blur(15px);
+}
+
+.mini-globe-orbit {
+  position: absolute;
+  width: 134px;
+  height: 134px;
+  border: 1px solid rgba(62, 204, 173, .10);
+  border-radius: 50%;
+}
+
+.station-card {
+  position: relative;
+  z-index: 2;
+  display: block;
+  margin: 2px 0 5px;
+  padding: 9px 10px;
+  border: 1px solid rgba(153, 161, 193, .27);
+  border-radius: 7px;
+  background: rgba(21, 25, 45, .88);
+  box-shadow: none;
+}
+
+.station-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.station-caption {
+  color: #8c91a8 !important;
+  font: 700 9px "Courier New", monospace !important;
+  letter-spacing: 1px;
+}
+
+.station-copy strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.station-copy span {
+  color: #aeb5c9;
+  font-size: 10px;
+}
+
+.radio-eq {
+  height: 25px;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-top: -33px;
+  padding: 0 8px 8px 45%;
+  pointer-events: none;
+}
+
+.radio-bar {
+  width: 3px;
+  background: linear-gradient(#4bd8a3, #7d42e8);
+}
+
+@keyframes radio-pulse {
+  from { height: 4px; }
+  to { height: 21px; }
+}
+
+.radio-controls {
+  grid-template-columns: 42px 1fr 42px;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.radio-controls button {
+  min-height: 33px;
+  color: #e8e9f2;
+  border: 1px solid rgba(148, 153, 184, .28);
+  border-radius: 6px;
+  background: #171b30;
+  box-shadow: none;
+}
+
+.radio-controls button:hover {
+  background: #20253e;
+}
+
+.radio-controls .radio-play {
+  color: #fff;
+  border-color: #6031ae;
+  background: linear-gradient(180deg, #743bd0, #4d1b9a);
+}
+
+.radio-volume {
+  margin-top: 8px;
+  color: #e6e8f3;
+}
+
+.radio-volume input {
+  accent-color: #7c45dc;
+}
+
+.radio-status,
+.radio-stage-note {
+  color: #aeb5c9;
+}
+
+.radio-error {
+  color: #ff9a9a;
+}
+
+.radio-footer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.globewave-link {
+  margin: 0;
+  padding: 9px 6px;
+  color: #eef0f8;
+  font-size: 10px;
+  text-align: center;
+  border: 1px solid rgba(148, 153, 184, .25);
+  border-radius: 6px;
+  background: #171b30;
+}
+
+.globewave-link:hover {
+  text-decoration: none;
+  background: #20253e;
+}
