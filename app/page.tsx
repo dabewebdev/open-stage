@@ -76,6 +76,8 @@ export default function Home() {
 
   const [needsAudioStart, setNeedsAudioStart] = useState(false);
 
+  const [radioCountries, setRadioCountries] = useState<string[]>([]);
+  const [radioCountry, setRadioCountry] = useState("Philippines");
   const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
   const [radioIndex, setRadioIndex] = useState(0);
   const [radioPlaying, setRadioPlaying] = useState(false);
@@ -442,9 +444,43 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
 
+    async function loadCountries() {
+      const mirrors = [
+        "https://de1.api.radio-browser.info/json",
+        "https://nl1.api.radio-browser.info/json",
+        "https://at1.api.radio-browser.info/json",
+      ];
+
+      for (const base of mirrors) {
+        try {
+          const response = await fetch(`${base}/countries?order=name&hidebroken=true`);
+          if (!response.ok) continue;
+          const data = (await response.json()) as Array<{ name: string; stationcount: number }>;
+          const names = data
+            .filter((country) => country.name && country.stationcount > 0)
+            .map((country) => country.name);
+          if (!cancelled && names.length) {
+            setRadioCountries(names);
+            return;
+          }
+        } catch {}
+      }
+    }
+
+    loadCountries();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
     async function loadRadio() {
       setRadioLoading(true);
       setRadioError("");
+      radioRef.current?.pause();
+      setRadioPlaying(false);
 
       const mirrors = [
         "https://de1.api.radio-browser.info/json",
@@ -455,7 +491,8 @@ export default function Home() {
       for (const base of mirrors) {
         try {
           const params = new URLSearchParams({
-            limit: "24",
+            country: radioCountry,
+            limit: "60",
             hidebroken: "true",
             order: "clickcount",
             reverse: "true",
@@ -470,6 +507,7 @@ export default function Home() {
           );
           if (!cancelled && usable.length) {
             setRadioStations(usable);
+            setRadioIndex(0);
             setRadioLoading(false);
             return;
           }
@@ -477,7 +515,8 @@ export default function Home() {
       }
 
       if (!cancelled) {
-        setRadioError("Radio directory is unavailable.");
+        setRadioStations([]);
+        setRadioError(`No playable stations found for ${radioCountry}.`);
         setRadioLoading(false);
       }
     }
@@ -486,7 +525,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [radioCountry]);
 
   useEffect(() => {
     const audio = radioRef.current;
@@ -1123,8 +1162,46 @@ export default function Home() {
                 <div className="mini-globe-glow" />
               </div>
 
+              <div className="radio-browser">
+                <label>
+                  <span>COUNTRY</span>
+                  <select
+                    value={radioCountry}
+                    onChange={(event) => setRadioCountry(event.target.value)}
+                  >
+                    {(radioCountries.length ? radioCountries : ["Philippines"]).map(
+                      (country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+
+                <label>
+                  <span>STATION</span>
+                  <select
+                    value={radioIndex}
+                    onChange={(event) => {
+                      radioRef.current?.pause();
+                      setRadioPlaying(false);
+                      setRadioError("");
+                      setRadioIndex(Number(event.target.value));
+                    }}
+                    disabled={radioLoading || radioStations.length === 0}
+                  >
+                    {radioStations.map((station, index) => (
+                      <option key={station.stationuuid || index} value={index}>
+                        {station.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
               {radioLoading ? (
-                <p className="radio-status">Tuning worldwide stations...</p>
+                <p className="radio-status">Tuning {radioCountry} stations...</p>
               ) : radioStation ? (
                 <>
                   <div className="station-card">
@@ -1181,21 +1258,16 @@ export default function Home() {
               {radioError && <p className="radio-error">{radioError}</p>}
 
               <div className="radio-footer-actions">
+                <span className="radio-inline-note">
+                  Select a country and station right here.
+                </span>
                 <a
                   className="globewave-link"
                   href="https://globewave.vercel.app"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  ☰ Browse Stations
-                </a>
-                <a
-                  className="globewave-link"
-                  href="https://globewave.vercel.app"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  ↗ Open GlobeWave
+                  ↗ Full GlobeWave
                 </a>
               </div>
             </div>
