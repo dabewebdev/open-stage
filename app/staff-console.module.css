@@ -357,47 +357,104 @@
   z-index: 20;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 22px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  overflow: hidden;
+  text-align: left;
+  padding: 28px 34px;
   box-sizing: border-box;
-  background: radial-gradient(circle at 50% 35%, #291439 0%, #18151f 58%, #141219 100%);
-  color: #f0eaf3;
+  color: white;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 75% 22%, rgba(255, 244, 190, 0.9) 0 3%, rgba(255, 244, 190, 0.2) 3.2%, transparent 10%),
+    linear-gradient(180deg, #77b8dc 0%, #a7d4e7 35%, #e9d7b2 62%, #b97852 100%);
+}
+
+.intermissionOverlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse at 12% 28%, rgba(255,255,255,.72) 0 5%, transparent 5.4%),
+    radial-gradient(ellipse at 28% 24%, rgba(255,255,255,.65) 0 7%, transparent 7.4%),
+    radial-gradient(ellipse at 58% 31%, rgba(255,255,255,.5) 0 5%, transparent 5.4%),
+    linear-gradient(165deg, transparent 0 56%, rgba(62, 103, 89, .9) 56.5% 62%, transparent 62.5%),
+    linear-gradient(190deg, transparent 0 59%, rgba(72, 92, 78, .95) 59.5% 66%, transparent 66.5%),
+    repeating-linear-gradient(90deg, transparent 0 6%, rgba(88, 54, 42, .72) 6.2% 9.3%, transparent 9.5% 12%),
+    linear-gradient(180deg, transparent 0 68%, rgba(117, 73, 51, .95) 68% 100%);
+  filter: saturate(.95);
+}
+
+.intermissionOverlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(21,16,25,.9) 0 2.2%, transparent 2.5% 97.5%, rgba(21,16,25,.9) 97.8% 100%),
+    linear-gradient(180deg, rgba(20,15,22,.88) 0 2.4%, transparent 2.7% 91%, rgba(14,10,16,.78) 91.5% 100%),
+    linear-gradient(180deg, transparent 45%, rgba(15, 12, 18, .16) 58%, rgba(15, 10, 18, .82) 100%);
+  box-shadow: inset 0 0 70px rgba(0,0,0,.22);
+}
+
+.intermissionOverlay > * {
+  position: relative;
+  z-index: 2;
+}
+
+.intermissionOverlay audio {
+  display: none;
 }
 
 .intermissionIcon {
-  font-size: 48px;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.4));
 }
 
 .intermissionKicker {
-  color: #d89dff;
-  font-size: 12px;
+  color: rgba(255,255,255,.88);
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.16em;
+  text-shadow: 0 1px 3px rgba(0,0,0,.75);
 }
 
 .intermissionOverlay h2 {
-  margin: 7px 0 4px;
-  color: #ddb6ff;
-  font-size: 28px;
+  margin: 6px 0 3px;
+  color: #fff;
+  font-size: clamp(25px, 3vw, 42px);
+  line-height: 1.05;
+  text-shadow: 0 2px 8px rgba(0,0,0,.7);
 }
 
 .intermissionOverlay p {
   margin: 0 0 10px;
-  color: #c9c0ce;
+  color: rgba(255,255,255,.88);
   font-size: 13px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.75);
 }
 
 .enableMediaButton {
   margin: 4px 0 10px;
+  border-color: rgba(255,255,255,.6);
+  background: rgba(38,16,58,.8);
+  backdrop-filter: blur(8px);
 }
 
 .stageOpenNote {
-  margin-top: 8px;
-  color: #baa9c5;
+  margin-top: 4px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 999px;
+  background: rgba(15,10,18,.42);
+  color: rgba(255,255,255,.92);
+  padding: 7px 11px;
   font-size: 11px;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 3px rgba(0,0,0,.7);
 }
 
 @media (max-width: 720px) {
@@ -417,7 +474,21 @@
     max-height: calc(100vh - 128px);
   }
 
+  .intermissionOverlay {
+    padding: 22px 20px 26px;
+    align-items: center;
+    text-align: center;
+  }
+
   .intermissionOverlay h2 {
-    font-size: 23px;
+    font-size: 28px;
+  }
+
+  .intermissionOverlay p {
+    font-size: 12px;
+  }
+
+  .stageOpenNote {
+    font-size: 10px;
   }
 }
