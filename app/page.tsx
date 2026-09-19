@@ -209,10 +209,49 @@ export default function Home() {
   }, [stageState?.current_user_id, stageState?.started_at]);
 
   useEffect(() => {
-    if (!isOnStage || stageSecondsLeft > 0 || autoEndRef.current) return;
+    if (!stageState?.current_user_id || stageSecondsLeft > 0 || autoEndRef.current) return;
+
     autoEndRef.current = true;
-    void endTurn();
-  }, [isOnStage, stageSecondsLeft]);
+
+    async function expireStage() {
+      try {
+        const response = await fetch("/api/stage-expire", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expectedUserId: stageState?.current_user_id,
+            expectedStartedAt: stageState?.started_at,
+          }),
+        });
+
+        if (!response.ok) {
+          autoEndRef.current = false;
+          return;
+        }
+
+        if (isOnStage) {
+          const room = roomRef.current;
+          if (room) {
+            await room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
+          }
+          setMicrophoneLive(false);
+        }
+
+        await loadStageState();
+        await loadQueue();
+      } catch (error) {
+        console.error("Stage expiry error:", error);
+        autoEndRef.current = false;
+      }
+    }
+
+    void expireStage();
+  }, [
+    stageSecondsLeft,
+    stageState?.current_user_id,
+    stageState?.started_at,
+    isOnStage,
+  ]);
 
   const timerTone =
     stageSecondsLeft <= 30
