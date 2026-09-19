@@ -77,6 +77,8 @@ export default function Home() {
   const [micHelp, setMicHelp] = useState(false);
 
   const [stageAudioLevel, setStageAudioLevel] = useState(0);
+  const [stageMuted, setStageMuted] = useState(false);
+  const [stageVolume, setStageVolume] = useState(100);
 
   const [needsAudioStart, setNeedsAudioStart] = useState(false);
 
@@ -143,6 +145,29 @@ export default function Home() {
       window.localStorage.setItem("open-stage-theme", next);
       return next;
     });
+  }
+
+  function applyStageAudioSettings(muted: boolean, volume: number) {
+    const container = audioContainerRef.current;
+    if (!container) return;
+
+    container.querySelectorAll("audio").forEach((element) => {
+      const audio = element as HTMLAudioElement;
+      audio.muted = muted;
+      audio.volume = Math.max(0, Math.min(1, volume / 100));
+    });
+  }
+
+  function toggleStageMute() {
+    const next = !stageMuted;
+    setStageMuted(next);
+    applyStageAudioSettings(next, stageVolume);
+  }
+
+  function changeStageVolume(value: number) {
+    setStageVolume(value);
+    if (value > 0 && stageMuted) setStageMuted(false);
+    applyStageAudioSettings(value === 0 ? true : false, value);
   }
 
   const inQueue = !!userId && queue.some((person) => person.user_id === userId);
