@@ -21,6 +21,7 @@ export default function StageVideoLayer() {
   const [nickname, setNickname] = useState("");
   const [cameraOn, setCameraOn] = useState(false);
   const [cameraBusy, setCameraBusy] = useState(false);
+  const [endingTurn, setEndingTurn] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [videoActive, setVideoActive] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(10 * 60);
@@ -233,6 +234,21 @@ export default function StageVideoLayer() {
     if (!response.ok) throw new Error(result?.error || "Unable to update camera permission.");
   };
 
+  const setAudioPublishPermission = async (action: "enable" | "disable") => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("Your guest session has expired.");
+
+    const response = await fetch("/api/livekit-stage-permission", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken: session.access_token, action }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result?.error || "Unable to update stage microphone permission.");
+  };
+
   const waitForPublishPermission = async (room: Room) => {
     if (room.localParticipant.permissions?.canPublish) return;
 
@@ -307,6 +323,29 @@ export default function StageVideoLayer() {
     }
   };
 
+  const endMyTurn = async () => {
+    if (!isOnStage || endingTurn) return;
+
+    setEndingTurn(true);
+    setCameraError("");
+
+    try {
+      if (cameraOn) await turnCameraOff();
+      await setAudioPublishPermission("disable").catch(() => {});
+
+      const { data, error } = await supabase.rpc("end_open_stage");
+      if (error) throw error;
+      if (!data) throw new Error("Unable to end your turn.");
+
+      setStage({ current_user_id: null, current_nickname: null, started_at: null });
+    } catch (error) {
+      console.error("End stage turn error:", error);
+      setCameraError(error instanceof Error ? error.message : "Unable to end your turn.");
+    } finally {
+      setEndingTurn(false);
+    }
+  };
+
   if (!stageHost) return null;
 
   return createPortal(
@@ -350,14 +389,24 @@ export default function StageVideoLayer() {
 
           {isOnStage && (
             <div style={styles.cameraControls}>
-              <button
-                type="button"
-                onClick={() => void toggleCamera()}
-                disabled={cameraBusy}
-                style={styles.cameraButton}
-              >
-                {cameraBusy ? "Camera..." : cameraOn ? "📷 Turn Camera Off" : "📷 Turn Camera On"}
-              </button>
+              <div style={styles.buttonRow}>
+                <button
+                  type="button"
+                  onClick={() => void toggleCamera()}
+                  disabled={cameraBusy || endingTurn}
+                  style={styles.cameraButton}
+                >
+                  {cameraBusy ? "Camera..." : cameraOn ? "📷 Camera Off" : "📷 Camera On"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void endMyTurn()}
+                  disabled={endingTurn}
+                  style={styles.endTurnButton}
+                >
+                  {endingTurn ? "Ending..." : "🚪 End My Turn"}
+                </button>
+              </div>
               {cameraError && <span style={styles.cameraError}>{cameraError}</span>}
             </div>
           )}
@@ -383,6 +432,8 @@ const styles: Record<string, React.CSSProperties> = {
   performerVideo: { position: "absolute", inset: 0, zIndex: 28, background: "#090b10", overflow: "hidden", transition: "opacity .2s ease" },
   videoInfo: { position: "absolute", zIndex: 32, left: 12, bottom: 12, display: "grid", gap: 2, padding: "7px 9px", borderRadius: 5, background: "rgba(0,0,0,.66)", color: "white", pointerEvents: "none" },
   cameraControls: { position: "absolute", zIndex: 36, right: 12, bottom: 12, display: "grid", justifyItems: "end", gap: 5 },
+  buttonRow: { display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" },
   cameraButton: { border: "1px solid rgba(255,255,255,.45)", borderRadius: 5, background: "rgba(32,18,43,.88)", color: "white", padding: "8px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer" },
-  cameraError: { maxWidth: 210, padding: "4px 6px", borderRadius: 4, background: "rgba(120,20,30,.9)", color: "white", fontSize: 9 },
+  endTurnButton: { border: "1px solid rgba(255,190,190,.65)", borderRadius: 5, background: "rgba(103,20,32,.9)", color: "white", padding: "8px 10px", fontSize: 11, fontWeight: 800, cursor: "pointer" },
+  cameraError: { maxWidth: 260, padding: "4px 6px", borderRadius: 4, background: "rgba(120,20,30,.9)", color: "white", fontSize: 9 },
 };
