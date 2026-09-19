@@ -830,17 +830,7 @@ export default function Home() {
     });
 
     room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
-      const currentStageUserId = stageState?.current_user_id;
-
-      if (!currentStageUserId) {
-        setStageAudioLevel(0);
-        return;
-      }
-
-      const performer = speakers.find(
-        (speaker) => speaker.identity === currentStageUserId,
-      );
-
+      const performer = speakers[0];
       setStageAudioLevel(performer?.audioLevel ?? 0);
     });
 
@@ -901,13 +891,58 @@ export default function Home() {
         audioContainerRef.current.innerHTML = "";
       }
     };
-  }, [joined, userId, nickname, stageState?.current_user_id]);
+  }, [joined, userId, nickname]);
 
   useEffect(() => {
     if (!stageState?.current_user_id) {
       setStageAudioLevel(0);
     }
   }, [stageState?.current_user_id]);
+
+  useEffect(() => {
+    if (!microphoneLive) return;
+
+    let frame = 0;
+    let stream: MediaStream | null = null;
+    let context: AudioContext | null = null;
+    let cancelled = false;
+
+    async function watchLocalMic() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+
+        const tick = () => {
+          if (cancelled) return;
+          analyser.getByteFrequencyData(data);
+          const average =
+            data.reduce((sum, value) => sum + value, 0) / data.length;
+          setStageAudioLevel(Math.min(1, average / 70));
+          frame = requestAnimationFrame(tick);
+        };
+
+        tick();
+      } catch (error) {
+        console.error("Microphone meter error:", error);
+      }
+    }
+
+    watchLocalMic();
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      stream?.getTracks().forEach((track) => track.stop());
+      context?.close();
+    };
+  }, [microphoneLive]);
+
+
 
   if (restoringSession) {
     return (
