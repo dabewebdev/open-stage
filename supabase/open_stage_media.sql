@@ -14,6 +14,8 @@ create table if not exists public.open_stage_media_state (
 
 alter table public.open_stage_media_state enable row level security;
 
+grant select, insert, update on table public.open_stage_media_state to service_role;
+
 insert into public.open_stage_media_state (
   id, status, title, kind, audio_url, started_at, updated_at, updated_by
 )
