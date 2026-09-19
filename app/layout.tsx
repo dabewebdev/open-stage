@@ -3,6 +3,7 @@ import "./globals.css";
 import StaffConsoleGate from "./StaffConsoleGate";
 import StageVideoLayer from "./StageVideoLayer";
 import PublicCamFallback from "./PublicCamFallback";
+import LayoutCustomizer from "./LayoutCustomizer";
 
 export const metadata: Metadata = {
   title: "Kwentayo",
@@ -21,6 +22,7 @@ export default function RootLayout({
         <StaffConsoleGate />
         <StageVideoLayer />
         <PublicCamFallback />
+        <LayoutCustomizer />
       </body>
     </html>
   );
