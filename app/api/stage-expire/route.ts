@@ -40,14 +40,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unable to verify stage." }, { status: 500 });
     }
 
+    const databaseStartedAt = new Date(stage.started_at).getTime();
+    const clientStartedAt = new Date(expectedStartedAt).getTime();
+
     if (
       stage.current_user_id !== expectedUserId ||
-      stage.started_at !== expectedStartedAt
+      !Number.isFinite(databaseStartedAt) ||
+      !Number.isFinite(clientStartedAt) ||
+      Math.abs(databaseStartedAt - clientStartedAt) > 1000
     ) {
       return NextResponse.json({ success: true, expired: false, reason: "stage-changed" });
     }
 
-    const startedAt = new Date(stage.started_at).getTime();
+    const startedAt = databaseStartedAt;
     if (!Number.isFinite(startedAt) || Date.now() - startedAt < STAGE_LIMIT_MS) {
       return NextResponse.json({ success: true, expired: false, reason: "not-due" });
     }
