@@ -1621,12 +1621,6 @@ function WindowTitle({ title }: { title: string }) {
   return (
     <div className="window-title">
       <span>{title}</span>
-
-      <div className="window-controls">
-        <button>−</button>
-        <button>□</button>
-        <button>×</button>
-      </div>
     </div>
   );
 }
