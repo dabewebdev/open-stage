@@ -51,6 +51,7 @@ type RadioStation = {
 export default function Home() {
   const [nicknameInput, setNicknameInput] = useState("");
   const [nickname, setNickname] = useState("");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -93,6 +94,21 @@ export default function Home() {
   const accessTokenRef = useRef<string | null>(null);
 
   const radioStation = radioStations[radioIndex] ?? null;
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("open-stage-theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  function toggleTheme() {
+    setTheme((current) => {
+      const next = current === "light" ? "dark" : "light";
+      window.localStorage.setItem("open-stage-theme", next);
+      return next;
+    });
+  }
 
   const inQueue = !!userId && queue.some((person) => person.user_id === userId);
 
@@ -881,7 +897,7 @@ export default function Home() {
   }
 
   return (
-    <main className="app">
+    <main className={`app theme-${theme}`}>
       <div
         ref={audioContainerRef}
         style={{
@@ -901,7 +917,12 @@ export default function Home() {
         </div>
 
         <div className="top-right">
-          Welcome, <strong>{nickname}!</strong>
+          <div className="top-welcome">
+            <span>Welcome, <strong>{nickname}!</strong></span>
+            <button className="theme-toggle" onClick={toggleTheme} type="button">
+              {theme === "light" ? "🌙 Yahoo Night" : "☀ Yahoo Classic"}
+            </button>
+          </div>
           <div
             style={{
               marginTop: "7px",
