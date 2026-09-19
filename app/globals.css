@@ -1234,3 +1234,62 @@ button {
   text-decoration: none;
   background: #20253e;
 }
+
+
+/* In-panel GlobeWave country + station browser */
+.radio-browser {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin: 2px 0 9px;
+}
+
+.radio-browser label {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+}
+
+.radio-browser label > span {
+  color: #777f9b;
+  font: 700 9px "Courier New", monospace;
+  letter-spacing: .8px;
+}
+
+.radio-browser select {
+  width: 100%;
+  min-width: 0;
+  height: 29px;
+  padding: 0 25px 0 8px;
+  color: #f3f5fb;
+  font-size: 11px;
+  border: 1px solid rgba(145, 154, 185, .34);
+  border-radius: 5px;
+  outline: none;
+  background: #171b30;
+}
+
+.radio-browser select:focus {
+  border-color: #48cfa2;
+  box-shadow: 0 0 0 2px rgba(72, 207, 162, .10);
+}
+
+.radio-browser select:disabled {
+  color: #73798d;
+}
+
+.radio-inline-note {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  color: #8e96ac;
+  font-size: 9px;
+  line-height: 1.25;
+}
+
+.radio-footer-actions {
+  grid-template-columns: 1fr auto;
+}
