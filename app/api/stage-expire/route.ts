@@ -106,3 +106,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unable to expire stage." }, { status: 500 });
   }
 }
+
+
+export async function GET() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return NextResponse.json(
+      { ok: false, step: "config", error: "missing-server-config" },
+      { status: 503 },
+    );
+  }
+
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data, error } = await admin
+    .from("open_stage_state")
+    .select("id,current_user_id,started_at")
+    .eq("id", 1)
+    .single();
+
+  if (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        step: "stage-read",
+        code: error.code ?? null,
+        error: error.message ?? "stage-read-failed",
+      },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({
+    ok: true,
+    step: "stage-read",
+    hasCurrentPerformer: Boolean(data?.current_user_id),
+    hasStartedAt: Boolean(data?.started_at),
+  });
+}
