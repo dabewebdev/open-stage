@@ -1756,3 +1756,105 @@ button {
     grid-column: auto;
   }
 }
+
+
+/* Open Stage Beta polish: turn timer, rules, friendlier status */
+.stage-timer {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 7px auto 3px;
+  padding: 6px 10px;
+  color: #421073;
+  border: 1px solid #c7b4d8;
+  border-radius: 5px;
+  background: #f5eff9;
+}
+
+.stage-timer strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-timer small {
+  color: #74677d;
+  font-size: 10px;
+}
+
+.stage-timer.warning {
+  color: #8a5100;
+  border-color: #d6aa62;
+  background: #fff5df;
+}
+
+.stage-timer.danger {
+  color: #a51919;
+  border-color: #d88b8b;
+  background: #fff0f0;
+  animation: timer-warning 1s ease-in-out infinite alternate;
+}
+
+@keyframes timer-warning {
+  from { opacity: 1; }
+  to { opacity: .7; }
+}
+
+.stage-limit-note {
+  margin: 7px 10px 0;
+  padding: 7px 8px;
+  color: #5f5367;
+  font-size: 11px;
+  text-align: center;
+  border-top: 1px solid #ddd5e1;
+}
+
+.theme-dark .stage-timer {
+  color: #d5b7ff;
+  border-color: #584466;
+  background: #27212d;
+}
+
+.theme-dark .stage-timer small {
+  color: #aaa0b1;
+}
+
+.theme-dark .stage-timer.warning {
+  color: #ffd08a;
+  border-color: #725b37;
+  background: #2b261d;
+}
+
+.theme-dark .stage-timer.danger {
+  color: #ff9d9d;
+  border-color: #7d4949;
+  background: #301f22;
+}
+
+.theme-dark .stage-limit-note {
+  color: #aaa2b3;
+  border-top-color: #38323f;
+}
+
+@media (max-width: 700px) {
+  .workspace {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .stage-content {
+    min-height: 310px;
+  }
+
+  .chat-window {
+    min-height: 330px;
+  }
+
+  .radio-window {
+    max-height: none;
+  }
+
+  .mood-audio-bar {
+    position: relative;
+    z-index: 2;
+  }
+}
