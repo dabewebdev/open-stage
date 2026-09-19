@@ -170,6 +170,10 @@ export default function Home() {
     applyStageAudioSettings(value === 0 ? true : false, value);
   }
 
+  useEffect(() => {
+    applyStageAudioSettings(stageMuted, stageVolume);
+  }, [stageMuted, stageVolume]);
+
   const inQueue = !!userId && queue.some((person) => person.user_id === userId);
 
   const isOnStage = !!userId && stageState?.current_user_id === userId;
@@ -628,13 +632,6 @@ export default function Home() {
     if (!audio) return;
     audio.volume = radioVolume / 100;
   }, [radioVolume]);
-
-  useEffect(() => {
-    if (stageState?.current_user_id && radioPlaying) {
-      radioRef.current?.pause();
-      setRadioPlaying(false);
-    }
-  }, [stageState?.current_user_id, radioPlaying]);
 
   async function toggleRadio() {
     const audio = radioRef.current;
@@ -1407,9 +1404,6 @@ export default function Home() {
                     />
                   </label>
 
-                  {stageState?.current_user_id && (
-                    <p className="radio-stage-note">Radio pauses while the stage is live.</p>
-                  )}
                 </>
               ) : null}
 
@@ -1431,6 +1425,52 @@ export default function Home() {
             </div>
           </div>
         </aside>
+      </section>
+
+      <section className="mood-audio-bar" aria-label="Your listening controls">
+        <div className="mood-audio-intro">
+          <strong>YOUR MOOD</strong>
+          <span>Listen your way — stage, radio, chat, or just relax.</span>
+        </div>
+
+        <div className="mood-control">
+          <button
+            className={stageMuted ? "mood-mute muted" : "mood-mute"}
+            onClick={toggleStageMute}
+            type="button"
+          >
+            🎙 {stageMuted ? "Stage Muted" : "Stage On"}
+          </button>
+          <input
+            aria-label="Stage volume"
+            type="range"
+            min="0"
+            max="100"
+            value={stageMuted ? 0 : stageVolume}
+            onChange={(event) => changeStageVolume(Number(event.target.value))}
+          />
+          <span>{stageMuted ? 0 : stageVolume}%</span>
+        </div>
+
+        <div className="mood-control">
+          <button
+            className={!radioPlaying ? "mood-mute muted" : "mood-mute"}
+            onClick={toggleRadio}
+            type="button"
+            disabled={!radioStation}
+          >
+            📻 {radioPlaying ? "Radio On" : "Radio Off"}
+          </button>
+          <input
+            aria-label="Radio volume"
+            type="range"
+            min="0"
+            max="100"
+            value={radioVolume}
+            onChange={(event) => setRadioVolume(Number(event.target.value))}
+          />
+          <span>{radioVolume}%</span>
+        </div>
       </section>
 
       {showMicPrompt && (
