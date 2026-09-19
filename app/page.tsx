@@ -72,6 +72,8 @@ export default function Home() {
   const [microphoneLive, setMicrophoneLive] = useState(false);
 
   const [microphoneStarting, setMicrophoneStarting] = useState(false);
+  const [showMicPrompt, setShowMicPrompt] = useState(false);
+  const [micHelp, setMicHelp] = useState(false);
 
   const [stageAudioLevel, setStageAudioLevel] = useState(0);
 
@@ -361,6 +363,12 @@ export default function Home() {
     });
   }
 
+  function requestTakeStage() {
+    if (!canTakeStage) return;
+    setMicHelp(false);
+    setShowMicPrompt(true);
+  }
+
   async function takeStage() {
     if (!canTakeStage) return;
 
@@ -372,8 +380,21 @@ export default function Home() {
       return;
     }
 
+    setShowMicPrompt(false);
     setMicrophoneStarting(true);
     setErrorMessage("");
+
+    try {
+      const permissionStream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+      permissionStream.getTracks().forEach((track) => track.stop());
+    } catch (error) {
+      console.error("Microphone permission error:", error);
+      setMicrophoneStarting(false);
+      setMicHelp(true);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.rpc("take_open_stage");
@@ -1034,7 +1055,7 @@ export default function Home() {
                   {canTakeStage && (
                     <button
                       className="get-line-button"
-                      onClick={takeStage}
+                      onClick={requestTakeStage}
                       disabled={microphoneStarting}
                     >
                       {microphoneStarting ? "Getting Mic..." : "Take The Stage"}
@@ -1135,7 +1156,7 @@ export default function Home() {
             {canTakeStage && (
               <button
                 className="get-line-button"
-                onClick={takeStage}
+                onClick={requestTakeStage}
                 disabled={microphoneStarting}
               >
                 {microphoneStarting ? "Getting Mic..." : "Take The Stage"}
@@ -1295,6 +1316,51 @@ export default function Home() {
           </div>
         </aside>
       </section>
+
+      {showMicPrompt && (
+        <div className="mic-permission-backdrop" role="dialog" aria-modal="true">
+          <div className="mic-permission-card">
+            <div className="mic-permission-icon">🎙️</div>
+            <h3>Ready to go on stage?</h3>
+            <p>
+              Open Stage needs your microphone so everyone in the room can hear you.
+            </p>
+            <p className="mic-permission-tip">
+              After you tap Yes, choose <strong>Allow</strong> when your browser asks.
+            </p>
+            <div className="mic-permission-actions">
+              <button className="mic-yes" onClick={takeStage}>
+                Yes, Use My Mic
+              </button>
+              <button className="mic-no" onClick={() => setShowMicPrompt(false)}>
+                Not Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {micHelp && (
+        <div className="mic-help-card">
+          <button
+            className="mic-help-close"
+            onClick={() => setMicHelp(false)}
+            aria-label="Close microphone help"
+          >
+            ×
+          </button>
+          <strong>🎙️ Microphone access is off</strong>
+          <span>Allow microphone access for Open Stage, then try again.</span>
+          <button
+            onClick={() => {
+              setMicHelp(false);
+              setShowMicPrompt(true);
+            }}
+          >
+            Try Microphone Again
+          </button>
+        </div>
+      )}
 
       {errorMessage && (
         <div
