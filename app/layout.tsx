@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import StaffConsole from "./StaffConsole";
+import StaffConsoleGate from "./StaffConsoleGate";
 
 export const metadata: Metadata = {
   title: "Kwentayo",
@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
-        <StaffConsole />
+        <StaffConsoleGate />
       </body>
     </html>
   );
