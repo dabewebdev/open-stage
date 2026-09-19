@@ -2133,3 +2133,56 @@ button {
     width: 100%;
   }
 }
+
+
+/* Kwentayo elegant panel chrome — remove nonfunctional desktop-window buttons */
+.window-title {
+  position: relative;
+  min-height: 38px;
+  height: auto;
+  padding: 8px 14px 8px 16px;
+  letter-spacing: .1px;
+  text-shadow: 0 1px 1px rgba(0,0,0,.28);
+  box-shadow: inset 0 1px rgba(255,255,255,.22);
+}
+
+.window-title::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: #d8c4f3;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.12);
+}
+
+.window-title {
+  justify-content: flex-start;
+}
+
+.window-controls {
+  display: none !important;
+}
+
+.window {
+  border-radius: 7px;
+}
+
+@media (max-width: 720px) {
+  .window-title {
+    min-height: 42px;
+    padding: 9px 13px;
+    font-size: 16px;
+  }
+
+  .window-title::before {
+    width: 6px;
+    height: 6px;
+    margin-right: 8px;
+  }
+
+  .window {
+    border-radius: 8px;
+  }
+}
