@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
 
     if (stageError || !stage) {
       console.error("Stage expiry read:", stageError);
-      return NextResponse.json({ error: "Unable to verify stage.", detail: stageError?.message ?? null }, { status: 500 });
+      return NextResponse.json(
+        { error: "Unable to verify stage.", detail: stageError?.message ?? null },
+        { status: 500 },
+      );
     }
 
     const databaseStartedAt = new Date(stage.started_at).getTime();
@@ -54,43 +57,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, expired: false, reason: "not-due" });
     }
 
-    // Use the same database function as the normal End My Turn button.
-    // This preserves the table's constraints/triggers instead of directly
-    // writing nullable values that may not be valid for this schema.
-    const { data: ended, error: endError } = await admin.rpc("end_open_stage");
+    const { data: expired, error: expireError } = await admin.rpc("expire_open_stage", {
+      expected_user_id: expectedUserId,
+      expected_started_at: expectedStartedAt,
+    });
 
-    if (endError) {
-      console.error("Stage expiry RPC:", endError);
+    if (expireError) {
+      console.error("Stage expiry RPC:", expireError);
       return NextResponse.json(
-        { error: "Unable to expire stage.", step: "end-open-stage", code: endError.code ?? null, detail: endError.message ?? null },
+        {
+          error: "Unable to expire stage.",
+          step: "expire-open-stage",
+          code: expireError.code ?? null,
+          detail: expireError.message ?? null,
+        },
         { status: 500 },
       );
     }
 
-    if (!ended) {
-      // A service-role call may not satisfy an auth.uid()-based RPC. Fall
-      // back to a constraint-safe update without nulling nickname/started_at.
-      const { data: cleared, error: clearError } = await admin
-        .from("open_stage_state")
-        .update({ current_user_id: null })
-        .eq("id", 1)
-        .eq("current_user_id", expectedUserId)
-        .select("id");
-
-      if (clearError) {
-        console.error("Stage expiry fallback:", clearError);
-        return NextResponse.json(
-          { error: "Unable to expire stage.", step: "stage-clear", code: clearError.code ?? null, detail: clearError.message ?? null },
-          { status: 500 },
-        );
-      }
-
-      if (!cleared?.length) {
-        return NextResponse.json({ success: true, expired: false, reason: "already-cleared" });
-      }
+    if (!expired) {
+      return NextResponse.json({ success: true, expired: false, reason: "stage-changed" });
     }
-
-    await admin.from("open_stage_queue").delete().eq("user_id", expectedUserId);
 
     if (livekitUrl && apiKey && apiSecret) {
       try {
@@ -112,45 +99,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-export async function GET() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return NextResponse.json(
-      { ok: false, step: "config", error: "missing-server-config" },
-      { status: 503 },
-    );
-  }
-
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const { data, error } = await admin
-    .from("open_stage_state")
-    .select("id,current_user_id,started_at")
-    .eq("id", 1)
-    .single();
-
-  if (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        step: "stage-read",
-        code: error.code ?? null,
-        error: error.message ?? "stage-read-failed",
-      },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({
-    ok: true,
-    step: "stage-read",
-    hasCurrentPerformer: Boolean(data?.current_user_id),
-    hasStartedAt: Boolean(data?.started_at),
-  });
 }
