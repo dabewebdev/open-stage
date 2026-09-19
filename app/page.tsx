@@ -55,6 +55,7 @@ export default function Home() {
 
   const [joined, setJoined] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [restoringSession, setRestoringSession] = useState(true);
 
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -96,6 +97,38 @@ export default function Home() {
   const accessTokenRef = useRef<string | null>(null);
 
   const radioStation = radioStations[radioIndex] ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreRoomSession() {
+      try {
+        const savedNickname = window.localStorage.getItem("open-stage-nickname");
+        if (!savedNickname) return;
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.user || cancelled) return;
+
+        accessTokenRef.current = session.access_token;
+        setUserId(session.user.id);
+        setNickname(savedNickname);
+        setNicknameInput(savedNickname);
+        setJoined(true);
+      } catch (error) {
+        console.error("Restore room session error:", error);
+      } finally {
+        if (!cancelled) setRestoringSession(false);
+      }
+    }
+
+    restoreRoomSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("open-stage-theme");
@@ -228,6 +261,7 @@ export default function Home() {
 
       setUserId(currentUserId);
       setNickname(cleanName);
+      window.localStorage.setItem("open-stage-nickname", cleanName);
       setJoined(true);
     } catch (error) {
       console.error("Enter room error:", error);
@@ -628,38 +662,45 @@ export default function Home() {
     }
   }
 
-  /*
-   * CLEAN UP QUEUE/STAGE WHEN TAB CLOSES
-   */
-  useEffect(() => {
-    if (!joined) {
-      return;
-    }
+  async function leaveRoom() {
+    const accessToken = accessTokenRef.current;
 
-    function leaveRoom() {
-      const accessToken = accessTokenRef.current;
-
-      if (!accessToken) {
-        return;
+    try {
+      if (radioRef.current) {
+        radioRef.current.pause();
       }
 
-      const body = JSON.stringify({
-        accessToken,
-      });
+      if (roomRef.current && microphoneLive) {
+        await roomRef.current.localParticipant.setMicrophoneEnabled(false);
+      }
 
-      const blob = new Blob([body], {
-        type: "application/json",
-      });
-
-      navigator.sendBeacon("/api/leave-room", blob);
+      if (accessToken) {
+        await fetch("/api/leave-room", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken }),
+        });
+      }
+    } catch (error) {
+      console.error("Leave room error:", error);
+    } finally {
+      window.localStorage.removeItem("open-stage-nickname");
+      setMicrophoneLive(false);
+      setNickname("");
+      setNicknameInput("");
+      setJoined(false);
+      setUserId(null);
+      setQueue([]);
+      setPeople([]);
+      setMessages([]);
+      setStageState(null);
     }
+  }
 
-    window.addEventListener("pagehide", leaveRoom);
-
-    return () => {
-      window.removeEventListener("pagehide", leaveRoom);
-    };
-  }, [joined]);
+  /*
+   * REFRESHES AND MOBILE TAB RELOADS DO NOT COUNT AS LEAVING.
+   * Supabase presence/LiveKit disconnect naturally and reconnect on restore.
+   */
 
   /*
    * SUPABASE REALTIME + PRESENCE
@@ -868,6 +909,18 @@ export default function Home() {
     }
   }, [stageState?.current_user_id]);
 
+  if (restoringSession) {
+    return (
+      <main className="join-screen">
+        <section className="join-box restore-box">
+          <div className="join-logo">🎙</div>
+          <h1>OPEN STAGE</h1>
+          <p className="join-tagline">Reconnecting to the room...</p>
+        </section>
+      </main>
+    );
+  }
+
   if (!joined) {
     return (
       <main className="join-screen">
@@ -940,6 +993,9 @@ export default function Home() {
         <div className="top-right">
           <div className="top-welcome">
             <span>Welcome, <strong>{nickname}!</strong></span>
+            <button className="leave-room-button" onClick={leaveRoom} type="button">
+              Leave Room
+            </button>
             <button className="theme-toggle" onClick={toggleTheme} type="button">
               {theme === "light" ? "🌙 Yahoo Night" : "☀ Yahoo Classic"}
             </button>
