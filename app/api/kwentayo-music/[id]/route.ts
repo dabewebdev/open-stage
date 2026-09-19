@@ -41,7 +41,7 @@ function seeded(seed: number) {
 
 function synthesize(track: NonNullable<ReturnType<typeof getKwentayoTrack>>) {
   const beat = 60 / track.tempo;
-  const duration = beat * 16; // 8 bars in 4/4 at two chords per bar; designed to loop.
+  const duration = beat * 64; // roughly 38–56 seconds depending on tempo.
   const count = Math.floor(duration * SAMPLE_RATE);
   const samples = new Int16Array(count);
   const random = seeded(track.seed * 7919);
@@ -69,7 +69,6 @@ function synthesize(track: NonNullable<ReturnType<typeof getKwentayoTrack>>) {
       value += Math.sin(2 * Math.PI * midiToHz(root + 12) * t) * softPulse * 0.07;
     }
 
-    // Very soft deterministic texture so each of the 100 tracks has its own character.
     value += (random() - 0.5) * 0.008;
 
     const fade = Math.min(1, t / 0.25, (duration - t) / 0.25);
