@@ -1858,3 +1858,278 @@ button {
     z-index: 2;
   }
 }
+
+
+/* Kwentayo responsive header + audio controls */
+.header-audio-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.header-audio-button {
+  min-width: 105px;
+  min-height: 34px;
+  padding: 6px 12px !important;
+  color: #fff !important;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,.65) !important;
+  border-radius: 5px;
+  background: linear-gradient(#7e42c3, #55208e) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.22), 0 1px 2px rgba(0,0,0,.2);
+  text-decoration: none !important;
+}
+
+.header-audio-button.muted {
+  color: #f1eaf6 !important;
+  background: rgba(30, 10, 52, .38) !important;
+}
+
+.header-audio-button:disabled {
+  opacity: .65;
+  cursor: default;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.audio-connection {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c8b9d2;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.25);
+}
+
+.connection-dot.online {
+  background: #54dc69;
+}
+
+.mood-label {
+  min-width: 92px;
+  color: #4c4054;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.theme-dark .mood-label {
+  color: #c9c0d0;
+}
+
+@media (min-width: 721px) {
+  .topbar {
+    min-height: 96px;
+  }
+
+  .top-right {
+    min-width: 390px;
+  }
+
+  .top-welcome {
+    flex-direction: row;
+    max-width: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    min-height: 0;
+    padding: 14px 16px 16px;
+    gap: 12px;
+  }
+
+  .brand {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .brand-icon {
+    font-size: 42px;
+  }
+
+  .brand h1 {
+    font-size: clamp(28px, 9vw, 38px);
+    line-height: 1;
+  }
+
+  .brand p {
+    margin-top: 5px;
+    font-size: 14px;
+  }
+
+  .top-right {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .header-audio-controls {
+    order: -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin: 0;
+  }
+
+  .header-audio-button {
+    min-width: 0;
+    min-height: 48px;
+    font-size: 15px;
+    border-radius: 7px;
+  }
+
+  .top-welcome {
+    max-width: none;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .top-welcome > span {
+    min-width: 0;
+    font-size: 15px;
+  }
+
+  .top-actions {
+    flex: 0 0 auto;
+  }
+
+  .leave-room-button,
+  .theme-toggle {
+    min-height: 34px;
+    padding: 5px 8px;
+  }
+
+  .audio-connection {
+    justify-content: flex-start;
+    margin: 0;
+  }
+
+  .workspace {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .people-window {
+    min-height: 210px;
+  }
+
+  .people-list {
+    min-height: 150px;
+  }
+
+  .stage-content {
+    min-height: 300px;
+    padding: 20px 14px;
+  }
+
+  .microphone {
+    font-size: 58px;
+  }
+
+  .stage-label {
+    font-size: 18px;
+  }
+
+  .stage-details h2 {
+    font-size: 36px;
+  }
+
+  .stage-details p {
+    font-size: 16px;
+  }
+
+  .queue-window {
+    min-height: 0;
+  }
+
+  .chat-window {
+    min-height: 300px;
+  }
+
+  .chat-messages {
+    min-height: 200px;
+  }
+
+  .right-column {
+    gap: 10px;
+  }
+
+  .mood-audio-bar {
+    margin: 0 8px 8px;
+    padding: 10px;
+    gap: 9px;
+  }
+
+  .mood-control {
+    grid-template-columns: 105px minmax(80px, 1fr) 36px;
+  }
+
+  .mini-globe {
+    height: 105px;
+  }
+
+  .mini-globe-earth {
+    width: 92px;
+    height: 92px;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .brand h1 {
+    font-size: 30px;
+  }
+
+  .brand-icon {
+    font-size: 36px;
+  }
+
+  .top-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .top-actions {
+    width: 100%;
+  }
+
+  .top-actions button {
+    flex: 1;
+  }
+
+  .mood-control {
+    grid-template-columns: 1fr 36px;
+  }
+
+  .mood-label {
+    grid-column: 1 / -1;
+  }
+
+  .radio-footer-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .globewave-link {
+    width: 100%;
+  }
+}
