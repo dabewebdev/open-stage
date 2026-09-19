@@ -209,43 +209,64 @@ export default function Home() {
   }, [stageState?.current_user_id, stageState?.started_at]);
 
   useEffect(() => {
-    if (!stageState?.current_user_id || stageSecondsLeft > 0 || autoEndRef.current) return;
+    if (!stageState?.current_user_id || !stageState.started_at || stageSecondsLeft > 0) return;
 
-    autoEndRef.current = true;
+    let cancelled = false;
+    let retryTimer: number | undefined;
 
     async function expireStage() {
+      if (cancelled || autoEndRef.current) return;
+      autoEndRef.current = true;
+
       try {
         const response = await fetch("/api/stage-expire", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          cache: "no-store",
           body: JSON.stringify({
             expectedUserId: stageState?.current_user_id,
             expectedStartedAt: stageState?.started_at,
           }),
         });
 
+        const result = await response.json().catch(() => null);
+
         if (!response.ok) {
-          autoEndRef.current = false;
+          console.error("Stage expiry rejected:", response.status, result);
           return;
         }
 
-        if (isOnStage) {
-          const room = roomRef.current;
-          if (room) {
-            await room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
+        if (result?.expired || result?.reason === "already-cleared" || result?.reason === "stage-changed") {
+          if (isOnStage) {
+            const room = roomRef.current;
+            if (room) {
+              await room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
+            }
+            setMicrophoneLive(false);
           }
-          setMicrophoneLive(false);
-        }
 
-        await loadStageState();
-        await loadQueue();
+          await loadStageState();
+          await loadQueue();
+          return;
+        }
       } catch (error) {
         console.error("Stage expiry error:", error);
+      } finally {
         autoEndRef.current = false;
+      }
+
+      if (!cancelled) {
+        retryTimer = window.setTimeout(expireStage, 3000);
       }
     }
 
     void expireStage();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      autoEndRef.current = false;
+    };
   }, [
     stageSecondsLeft,
     stageState?.current_user_id,
