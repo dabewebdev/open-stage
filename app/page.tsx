@@ -37,6 +37,17 @@ type StageState = {
 
 type AudioStatus = "disconnected" | "connecting" | "connected" | "error";
 
+type RadioStation = {
+  stationuuid: string;
+  name: string;
+  country: string;
+  countrycode: string;
+  favicon: string;
+  url_resolved: string;
+  codec: string;
+  bitrate: number;
+};
+
 export default function Home() {
   const [nicknameInput, setNicknameInput] = useState("");
   const [nickname, setNickname] = useState("");
@@ -65,11 +76,21 @@ export default function Home() {
 
   const [needsAudioStart, setNeedsAudioStart] = useState(false);
 
+  const [radioStations, setRadioStations] = useState<RadioStation[]>([]);
+  const [radioIndex, setRadioIndex] = useState(0);
+  const [radioPlaying, setRadioPlaying] = useState(false);
+  const [radioLoading, setRadioLoading] = useState(true);
+  const [radioError, setRadioError] = useState("");
+  const [radioVolume, setRadioVolume] = useState(55);
+  const radioRef = useRef<HTMLAudioElement | null>(null);
+
   const roomRef = useRef<Room | null>(null);
 
   const audioContainerRef = useRef<HTMLDivElement | null>(null);
 
   const accessTokenRef = useRef<string | null>(null);
+
+  const radioStation = radioStations[radioIndex] ?? null;
 
   const inQueue = !!userId && queue.some((person) => person.user_id === userId);
 
@@ -416,6 +437,119 @@ export default function Home() {
     await room.startAudio();
 
     setNeedsAudioStart(false);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRadio() {
+      setRadioLoading(true);
+      setRadioError("");
+
+      const mirrors = [
+        "https://de1.api.radio-browser.info/json",
+        "https://nl1.api.radio-browser.info/json",
+        "https://at1.api.radio-browser.info/json",
+      ];
+
+      for (const base of mirrors) {
+        try {
+          const params = new URLSearchParams({
+            limit: "24",
+            hidebroken: "true",
+            order: "clickcount",
+            reverse: "true",
+          });
+          const response = await fetch(`${base}/stations/search?${params}`);
+          if (!response.ok) continue;
+          const data = (await response.json()) as RadioStation[];
+          const usable = data.filter(
+            (station) =>
+              station.url_resolved &&
+              station.url_resolved.startsWith("https://"),
+          );
+          if (!cancelled && usable.length) {
+            setRadioStations(usable);
+            setRadioLoading(false);
+            return;
+          }
+        } catch {}
+      }
+
+      if (!cancelled) {
+        setRadioError("Radio directory is unavailable.");
+        setRadioLoading(false);
+      }
+    }
+
+    loadRadio();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = radioRef.current;
+    if (!audio) return;
+    audio.volume = radioVolume / 100;
+  }, [radioVolume]);
+
+  useEffect(() => {
+    if (stageState?.current_user_id && radioPlaying) {
+      radioRef.current?.pause();
+      setRadioPlaying(false);
+    }
+  }, [stageState?.current_user_id, radioPlaying]);
+
+  async function toggleRadio() {
+    const audio = radioRef.current;
+    if (!audio || !radioStation) return;
+
+    setRadioError("");
+
+    if (radioPlaying) {
+      audio.pause();
+      setRadioPlaying(false);
+      return;
+    }
+
+    try {
+      if (audio.src !== radioStation.url_resolved) {
+        audio.src = radioStation.url_resolved;
+        audio.load();
+      }
+      await audio.play();
+      setRadioPlaying(true);
+    } catch {
+      setRadioPlaying(false);
+      setRadioError("This station could not play. Try the next station.");
+    }
+  }
+
+  async function changeRadioStation(direction: number) {
+    if (!radioStations.length) return;
+
+    const audio = radioRef.current;
+    const wasPlaying = radioPlaying;
+    audio?.pause();
+
+    const nextIndex =
+      (radioIndex + direction + radioStations.length) % radioStations.length;
+    setRadioIndex(nextIndex);
+    setRadioPlaying(false);
+    setRadioError("");
+
+    if (wasPlaying && audio) {
+      const next = radioStations[nextIndex];
+      try {
+        audio.src = next.url_resolved;
+        audio.load();
+        await audio.play();
+        setRadioPlaying(true);
+      } catch {
+        setRadioError("This station could not play. Try another.");
+      }
+    }
   }
 
   /*
@@ -957,6 +1091,105 @@ export default function Home() {
                   ? "You're on stage!"
                   : "Take your turn on stage!"}
             </p>
+          </div>
+
+          <div className="window radio-window">
+            <WindowTitle title="GlobeWave • DJ Radio" />
+
+            <div className="dj-radio">
+              <audio
+                ref={radioRef}
+                onPlaying={() => setRadioPlaying(true)}
+                onPause={() => setRadioPlaying(false)}
+                onError={() => {
+                  setRadioPlaying(false);
+                  setRadioError("Station stream unavailable. Try another.");
+                }}
+              />
+
+              <div className="dj-head">
+                <div className={`dj-disc ${radioPlaying ? "spinning" : ""}`}>
+                  <span>GW</span>
+                </div>
+                <div className="dj-copy">
+                  <span className="on-air-dot" />
+                  <strong>{radioPlaying ? "ON AIR" : "RADIO READY"}</strong>
+                  <small>Powered by GlobeWave</small>
+                </div>
+              </div>
+
+              {radioLoading ? (
+                <p className="radio-status">Tuning worldwide stations...</p>
+              ) : radioStation ? (
+                <>
+                  <div className="station-card">
+                    <div className="station-logo">
+                      {radioStation.favicon ? (
+                        <img src={radioStation.favicon} alt="" />
+                      ) : (
+                        <span>📻</span>
+                      )}
+                    </div>
+                    <div className="station-copy">
+                      <strong>{radioStation.name}</strong>
+                      <span>
+                        {radioStation.country || "Worldwide"}
+                        {radioStation.codec ? ` • ${radioStation.codec}` : ""}
+                        {radioStation.bitrate ? ` • ${radioStation.bitrate} kbps` : ""}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="radio-eq" aria-hidden="true">
+                    {Array.from({ length: 18 }, (_, index) => (
+                      <span
+                        key={index}
+                        className={radioPlaying ? "radio-bar active" : "radio-bar"}
+                        style={{ animationDelay: `${index * 70}ms` }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="radio-controls">
+                    <button onClick={() => changeRadioStation(-1)} aria-label="Previous station">
+                      ◀◀
+                    </button>
+                    <button className="radio-play" onClick={toggleRadio}>
+                      {radioPlaying ? "❚❚ Pause" : "▶ Play"}
+                    </button>
+                    <button onClick={() => changeRadioStation(1)} aria-label="Next station">
+                      ▶▶
+                    </button>
+                  </div>
+
+                  <label className="radio-volume">
+                    <span>🔊</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={radioVolume}
+                      onChange={(event) => setRadioVolume(Number(event.target.value))}
+                    />
+                  </label>
+
+                  {stageState?.current_user_id && (
+                    <p className="radio-stage-note">Radio pauses while the stage is live.</p>
+                  )}
+                </>
+              ) : null}
+
+              {radioError && <p className="radio-error">{radioError}</p>}
+
+              <a
+                className="globewave-link"
+                href="https://globewave.vercel.app"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open full GlobeWave ↗
+              </a>
+            </div>
           </div>
         </aside>
       </section>
