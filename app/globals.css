@@ -1635,3 +1635,124 @@ button {
     min-height: 30px;
   }
 }
+
+
+/* Personal listening controls — one room, different moods */
+.mood-audio-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(210px, .9fr) minmax(210px, .9fr);
+  gap: 12px;
+  align-items: center;
+  margin: 0 12px 10px;
+  padding: 9px 12px;
+  color: #3b3042;
+  border: 1px solid #b9afc0;
+  border-radius: 5px;
+  background: linear-gradient(#fff, #eeeaf2);
+  box-shadow: inset 0 1px #fff;
+}
+
+.mood-audio-intro {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mood-audio-intro strong {
+  color: #421073;
+  font-size: 11px;
+  letter-spacing: .7px;
+}
+
+.mood-audio-intro span {
+  color: #746b79;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.mood-control {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(65px, 1fr) 34px;
+  gap: 7px;
+  align-items: center;
+}
+
+.mood-control input {
+  width: 100%;
+  accent-color: #5b168e;
+}
+
+.mood-control > span {
+  color: #655c6c;
+  font-size: 10px;
+  text-align: right;
+}
+
+.mood-mute {
+  min-height: 29px;
+  padding: 3px 8px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid #431071;
+  border-radius: 4px;
+  background: linear-gradient(#7541ad, #4d177e);
+  cursor: pointer;
+}
+
+.mood-mute.muted {
+  color: #5e5663;
+  border-color: #aaa1af;
+  background: linear-gradient(#fff, #ddd9e0);
+}
+
+.mood-mute:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+.theme-dark .mood-audio-bar {
+  color: #e6e1ea;
+  border-color: #4d4557;
+  background: linear-gradient(#211f29, #18171f);
+  box-shadow: inset 0 1px rgba(255,255,255,.05);
+}
+
+.theme-dark .mood-audio-intro strong {
+  color: #cfaff7;
+}
+
+.theme-dark .mood-audio-intro span,
+.theme-dark .mood-control > span {
+  color: #aaa2b3;
+}
+
+.theme-dark .mood-mute.muted {
+  color: #bbb4c1;
+  border-color: #554d5c;
+  background: linear-gradient(#37333d, #28252d);
+}
+
+@media (max-width: 900px) {
+  .mood-audio-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mood-audio-intro {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .mood-audio-bar {
+    grid-template-columns: 1fr;
+    margin: 0 8px 8px;
+  }
+
+  .mood-audio-intro {
+    grid-column: auto;
+  }
+}
