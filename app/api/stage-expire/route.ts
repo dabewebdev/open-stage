@@ -58,19 +58,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Conditional update prevents an old timer from clearing a newer performer.
+    // Keep current_nickname as an empty string. The original stage table was
+    // created with a non-null nickname field, so writing null here caused the
+    // production 500s that left an expired performer stuck at 0:00.
     const { data: cleared, error: clearError } = await admin
       .from("open_stage_state")
       .update({
         current_user_id: null,
-        current_nickname: null,
+        current_nickname: "",
         started_at: null,
       })
       .eq("id", 1)
       .eq("current_user_id", expectedUserId)
-      .select("current_user_id");
+      .select("id");
 
     if (clearError) {
-      return NextResponse.json({ error: "Unable to expire stage." }, { status: 500 });
+      console.error("Stage expiry database cleanup:", clearError);
+      return NextResponse.json(
+        {
+          error: "Unable to expire stage.",
+          step: "stage-clear",
+          code: clearError.code ?? null,
+          detail: clearError.message ?? null,
+        },
+        { status: 500 },
+      );
     }
 
     if (!cleared?.length) {
