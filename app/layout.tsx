@@ -4,6 +4,7 @@ import StaffConsoleGate from "./StaffConsoleGate";
 import StageVideoLayer from "./StageVideoLayer";
 import PublicCamFallback from "./PublicCamFallback";
 import LayoutCustomizer from "./LayoutCustomizer";
+import CameraLensControl from "./CameraLensControl";
 
 export const metadata: Metadata = {
   title: "Kwentayo",
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body>
         {children}
         <StaffConsoleGate />
+        <CameraLensControl />
         <StageVideoLayer />
         <PublicCamFallback />
         <LayoutCustomizer />
