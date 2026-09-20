@@ -26,7 +26,10 @@ export default function QueueGuardian() {
     let accessToken = "";
     let onlineIds = new Set<string>();
 
-    const channel = supabase.channel("open-stage-room-queue-guardian");
+    // Join the same Realtime topic as the room so we can see who is actually
+    // present. This channel does not track a second presence record; it only
+    // listens to the room's existing presence state.
+    const channel = supabase.channel("open-stage-room");
 
     const readPresence = () => {
       const next = new Set<string>();
@@ -79,6 +82,8 @@ export default function QueueGuardian() {
       const first = queue[0];
       const callerIndex = queue.findIndex((item) => item.user_id === userId);
 
+      // Only people already waiting behind the stale first spot can trigger
+      // cleanup. This keeps a random visitor from changing the queue.
       if (callerIndex < 1) return;
 
       if (onlineIds.has(first.user_id)) {
@@ -110,24 +115,9 @@ export default function QueueGuardian() {
     void loadIdentity();
     const timer = window.setInterval(() => void sweep(), 4_000);
 
-    // Best-effort cleanup when a user closes/reloads the tab. This covers most
-    // normal exits so their queue/stage state does not linger behind them.
-    const handlePageHide = () => {
-      if (!accessToken) return;
-      void fetch("/api/leave-room", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken }),
-        keepalive: true,
-      }).catch(() => {});
-    };
-
-    window.addEventListener("pagehide", handlePageHide);
-
     return () => {
       cancelled = true;
       window.clearInterval(timer);
-      window.removeEventListener("pagehide", handlePageHide);
       void supabase.removeChannel(channel);
     };
   }, []);
