@@ -5,7 +5,6 @@ import StageVideoLayer from "./StageVideoLayer";
 import PublicCamFallback from "./PublicCamFallback";
 import LayoutCustomizer from "./LayoutCustomizer";
 import CameraLensControl from "./CameraLensControl";
-import QueueGuardian from "./QueueGuardian";
 
 export const metadata: Metadata = {
   title: "Kwentayo",
@@ -23,7 +22,6 @@ export default function RootLayout({
         {children}
         <StaffConsoleGate />
         <CameraLensControl />
-        <QueueGuardian />
         <StageVideoLayer />
         <PublicCamFallback />
         <LayoutCustomizer />
