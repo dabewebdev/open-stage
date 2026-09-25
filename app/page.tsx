@@ -69,6 +69,8 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [audioStatus, setAudioStatus] = useState<AudioStatus>("disconnected");
+  const [audioRetry, setAudioRetry] = useState(0);
+  const [micPromptError, setMicPromptError] = useState("");
 
   const [microphoneLive, setMicrophoneLive] = useState(false);
 
@@ -525,7 +527,14 @@ export default function Home() {
   function requestTakeStage() {
     if (!canTakeStage) return;
     setMicHelp(false);
+    setMicPromptError("");
     setShowMicPrompt(true);
+  }
+
+  function retryLiveAudio() {
+    setMicPromptError("Reconnecting live audio. Tap Yes again when it says Connected.");
+    setErrorMessage("");
+    setAudioRetry((count) => count + 1);
   }
 
   async function takeStage() {
@@ -534,12 +543,16 @@ export default function Home() {
     const room = roomRef.current;
 
     if (!room || audioStatus !== "connected") {
-      setErrorMessage("Live audio is not connected yet.");
-
+      if (audioStatus === "connecting") {
+        setMicPromptError("Live audio is still connecting. Please try again in a moment.");
+      } else {
+        retryLiveAudio();
+      }
       return;
     }
 
     setShowMicPrompt(false);
+    setMicPromptError("");
     setMicrophoneStarting(true);
     setErrorMessage("");
 
@@ -965,6 +978,13 @@ export default function Home() {
       setNeedsAudioStart(!room.canPlaybackAudio);
     });
 
+    room.on(RoomEvent.Disconnected, () => {
+      if (!cancelled) {
+        setAudioStatus("error");
+        setErrorMessage("Live audio disconnected. Reconnect to use the stage.");
+      }
+    });
+
     room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
       const performer = speakers[0];
       setStageAudioLevel(performer?.audioLevel ?? 0);
@@ -1003,12 +1023,15 @@ export default function Home() {
         }
 
         setAudioStatus("connected");
+        setMicPromptError("");
 
         setNeedsAudioStart(!room.canPlaybackAudio);
       } catch (error) {
+        if (cancelled) return;
         console.error("LiveKit connection error:", error);
 
         setAudioStatus("error");
+        setMicPromptError("Live audio could not connect. Tap Yes to retry, or try again on a stable connection.");
 
         setErrorMessage("Unable to connect to live audio.");
       }
@@ -1027,7 +1050,7 @@ export default function Home() {
         audioContainerRef.current.innerHTML = "";
       }
     };
-  }, [joined, userId, nickname]);
+  }, [joined, userId, nickname, audioRetry]);
 
   useEffect(() => {
     if (!stageState?.current_user_id) {
@@ -1201,6 +1224,9 @@ export default function Home() {
               {audioStatus === "error" && "Error"}
               {audioStatus === "disconnected" && "Disconnected"}
             </strong>
+            {audioStatus === "error" && (
+              <button type="button" onClick={retryLiveAudio}>Reconnect audio</button>
+            )}
           </div>
         </div>
       </header>
@@ -1609,9 +1635,10 @@ export default function Home() {
             <p className="mic-permission-tip">
               After you tap Yes, choose <strong>Allow</strong> when your browser asks.
             </p>
+            {micPromptError && <p role="alert" className="mic-permission-tip">{micPromptError}</p>}
             <div className="mic-permission-actions">
-              <button className="mic-yes" onClick={takeStage}>
-                Yes, Use My Mic
+              <button className="mic-yes" onClick={takeStage} disabled={microphoneStarting}>
+                {audioStatus === "connecting" ? "Connecting Audio..." : "Yes, Use My Mic"}
               </button>
               <button className="mic-no" onClick={() => setShowMicPrompt(false)}>
                 Not Now
