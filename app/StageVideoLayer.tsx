@@ -24,6 +24,7 @@ export default function StageVideoLayer() {
   const [endingTurn, setEndingTurn] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [videoActive, setVideoActive] = useState(false);
+  const [videoConnected, setVideoConnected] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(10 * 60);
 
   const roomRef = useRef<Room | null>(null);
@@ -161,14 +162,18 @@ export default function StageVideoLayer() {
   }, [stage?.current_user_id, stage?.started_at]);
 
   useEffect(() => {
-    if (!userId || !nickname) {
+    // The scenic camera is public. A LiveKit video connection is only needed
+    // while someone is performing, including viewers of that performer.
+    if (!userId || !nickname || !stage?.current_user_id) {
       roomRef.current?.disconnect();
       roomRef.current = null;
+      setVideoConnected(false);
       clearVideo();
       return;
     }
 
     let cancelled = false;
+    setVideoConnected(false);
     const room = new Room({ adaptiveStream: true, dynacast: true });
     roomRef.current = room;
 
@@ -198,8 +203,9 @@ export default function StageVideoLayer() {
 
         await room.connect(result.url, result.token);
         if (cancelled) room.disconnect();
+        else setVideoConnected(true);
       } catch (error) {
-        console.error("Stage video connection error:", error);
+        if (!cancelled) console.error("Stage video connection error:", error);
       }
     };
 
@@ -207,11 +213,12 @@ export default function StageVideoLayer() {
 
     return () => {
       cancelled = true;
+      setVideoConnected(false);
       clearVideo();
       room.disconnect();
       if (roomRef.current === room) roomRef.current = null;
     };
-  }, [userId, nickname, attachTrack, clearVideo]);
+  }, [userId, nickname, stage?.current_user_id, attachTrack, clearVideo]);
 
   useEffect(() => {
     clearVideo();
@@ -286,7 +293,7 @@ export default function StageVideoLayer() {
   }, [isOnStage, cameraOn, turnCameraOff]);
 
   const toggleCamera = async () => {
-    if (!isOnStage || cameraBusy) return;
+    if (!isOnStage || !videoConnected || cameraBusy) return;
     const room = roomRef.current;
     if (!room) return;
 
@@ -393,10 +400,10 @@ export default function StageVideoLayer() {
                 <button
                   type="button"
                   onClick={() => void toggleCamera()}
-                  disabled={cameraBusy || endingTurn}
+                  disabled={!videoConnected || cameraBusy || endingTurn}
                   style={styles.cameraButton}
                 >
-                  {cameraBusy ? "Camera..." : cameraOn ? "📷 Camera Off" : "📷 Camera On"}
+                  {cameraBusy ? "Camera..." : !videoConnected ? "Connecting camera..." : cameraOn ? "📷 Camera Off" : "📷 Camera On"}
                 </button>
                 <button
                   type="button"
